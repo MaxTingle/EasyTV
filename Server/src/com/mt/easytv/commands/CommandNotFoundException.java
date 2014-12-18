@@ -11,6 +11,6 @@ public class CommandNotFoundException extends Exception
     @Override
     public String getMessage()
     {
-        return "Command " + this._command + super.getMessage();
+        return "command " + this._command + super.getMessage();
     }
 }

@@ -1,5 +1,6 @@
 package com.mt.easytv;
 
+import com.mt.easytv.commands.CommandArgument;
 import com.mt.easytv.commands.CommandHandler;
 
 import java.io.BufferedReader;
@@ -7,7 +8,8 @@ import java.io.InputStreamReader;
 
 public class Main
 {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception
+    {
         CommandHandler commandHandler = new CommandHandler();
         Main._addCommands(commandHandler);
 
@@ -21,17 +23,12 @@ public class Main
         }
 
         while(true) {
-            try {
-                commandHandler.read();
-            }
-            catch(Exception e) {
-                System.out.println(e.toString());
-            }
+            commandHandler.read();
         }
     }
 
     private static void _addCommands(CommandHandler handler) {
-        handler.addCommand("quit", (String[] args) -> System.exit(0));
+        handler.addCommand("quit", (CommandArgument[] args) -> System.exit(0));
     }
 
     private static void _processExecCommands(CommandHandler handler, String[] args) throws Exception {

@@ -1,7 +1,8 @@
 package com.mt.easytv.commands;
 
-public abstract class Command
+public abstract class Command implements ICommand
 {
-    public String Command = "";
+    public String command = "";
+
     public abstract void processCommand(CommandArgument[] args);
 }

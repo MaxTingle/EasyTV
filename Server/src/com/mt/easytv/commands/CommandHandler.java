@@ -20,14 +20,14 @@ public final class CommandHandler
                 action.processCommand(args);
             }
         };
-        command.Command = commandName;
+        command.command = commandName;
 
         this.addCommand(command);
     }
 
     public boolean removeCommand(String commandName) {
         for(Command command : this._commands) {
-            if(commandName.equals(command.Command)) {
+            if (commandName.equals(command.command)) {
                 this.removeCommand(command);
                 return true;
             }
@@ -45,7 +45,8 @@ public final class CommandHandler
         return true;
     }
 
-    public void processCommand(String commandFull) throws CommandNotFoundException {
+    public void processCommand(String commandFull) throws CommandNotFoundException, ArgumentNotFoundException
+    {
         /* Building up argument array */
         String[] commandParts = commandFull.split(" ");
         String[] argumentParts = new String[commandParts.length - 1];
@@ -53,7 +54,7 @@ public final class CommandHandler
         CommandArgument[] args = CommandArgument.fromArray(argumentParts);
 
         for(Command command : this._commands) {
-            if(command.Command.equals(commandParts[0])) {
+            if (command.command.equals(commandParts[0])) {
                 command.processCommand(args);
                 break;
             }

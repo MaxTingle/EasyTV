@@ -4,7 +4,8 @@ public class CommandNotFoundException extends Exception
 {
     private String _command;
 
-    public CommandNotFoundException(String command) {
+    public CommandNotFoundException(String command)
+    {
         this._command = command;
     }
 

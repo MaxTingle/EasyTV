@@ -1,6 +1,7 @@
 package com.mt.easytv.commands;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public final class CommandHandler
@@ -13,10 +14,13 @@ public final class CommandHandler
         this._commands.add(command);
     }
 
-    public void addCommand(String commandName, ICommand action) {
-        Command command = new Command() {
+    public void addCommand(String commandName, ICommand action)
+    {
+        Command command = new Command()
+        {
             @Override
-            public void processCommand(CommandArgument[] args) {
+            public void processCommand(CommandArgument[] args)
+            {
                 action.processCommand(args);
             }
         };
@@ -25,8 +29,9 @@ public final class CommandHandler
         this.addCommand(command);
     }
 
-    public boolean removeCommand(String commandName) {
-        for(Command command : this._commands) {
+    public boolean removeCommand(String commandName)
+    {
+        for (Command command : this._commands) {
             if (commandName.equals(command.command)) {
                 this.removeCommand(command);
                 return true;
@@ -36,8 +41,9 @@ public final class CommandHandler
         return false;
     }
 
-    public boolean removeCommand(Command command) {
-        if(!this._commands.contains(command)) {
+    public boolean removeCommand(Command command)
+    {
+        if (!this._commands.contains(command)) {
             return false;
         }
 
@@ -53,7 +59,7 @@ public final class CommandHandler
         System.arraycopy(commandParts, 1, argumentParts, 0, commandParts.length - 1);
         CommandArgument[] args = CommandArgument.fromArray(argumentParts);
 
-        for(Command command : this._commands) {
+        for (Command command : this._commands) {
             if (command.command.equals(commandParts[0])) {
                 command.processCommand(args);
                 break;
@@ -61,12 +67,14 @@ public final class CommandHandler
         }
     }
 
-    public void addReader(BufferedReader reader) {
+    public void addReader(BufferedReader reader)
+    {
         this._readers.add(reader);
     }
 
-    public boolean removeReader(BufferedReader reader) {
-        if(!this._readers.contains(reader)) {
+    public boolean removeReader(BufferedReader reader)
+    {
+        if (!this._readers.contains(reader)) {
             return false;
         }
 
@@ -74,13 +82,32 @@ public final class CommandHandler
         return true;
     }
 
-    public void read() throws Exception {
-        for(BufferedReader reader : this._readers) {
+    public void read() throws Exception
+    {
+        for (BufferedReader reader : this._readers) {
             this.readFrom(reader);
         }
     }
 
-    public void readFrom(BufferedReader reader) throws Exception {
-        this.processCommand(reader.readLine());
+    public void readFrom(BufferedReader reader) throws Exception
+    {
+        String line = reader.readLine();
+
+        if (line != null) {
+            this.processCommand(line);
+        }
+    }
+
+    public void destroy()
+    {
+        for (BufferedReader reader : this._readers) {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                reader = null;
+            }
+        }
+
+        this._readers.clear();
     }
 }

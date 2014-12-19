@@ -22,6 +22,7 @@ public class CommandArgument implements Cloneable
     {
         ArrayList<CommandArgument> commandArguments = new ArrayList<>();
         CommandArgument currentCommand = new CommandArgument();
+        boolean previousWasString = false;
 
         /* For each of the command split via space */
         for (String arg : args) {
@@ -30,11 +31,18 @@ public class CommandArgument implements Cloneable
                 if (currentCommand.argument != null) { //not new command
                     commandArguments.add((CommandArgument) currentCommand.clone());
                     currentCommand = new CommandArgument();
+                    previousWasString = false;
                 }
 
                 currentCommand.argument = arg.replaceFirst("-", "");
-            } else if (currentCommand.value == null) { //is value
-                currentCommand.value += arg; //in-case the value has spaces in it, will be reset on net command anyway
+            } else if (previousWasString || currentCommand.value == null) { //is value
+                currentCommand.value = (currentCommand.value == null ? "" : currentCommand.value) + (previousWasString ? " " : "") + arg.replace("\"", "");
+
+                if (arg.startsWith("\"")) {
+                    previousWasString = true;
+                } else if (arg.endsWith("\"")) {
+                    previousWasString = false;
+                }
             } else { //currentCommand was value for the currentCommand (x2) command
                 throw new ArgumentNotFoundException(arg);
             }

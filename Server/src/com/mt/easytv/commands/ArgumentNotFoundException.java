@@ -12,6 +12,6 @@ public class ArgumentNotFoundException extends Exception
     @Override
     public String getMessage()
     {
-        return "argument " + this._value + super.getMessage();
+        return "Argument " + this._value + " is not a valid command.";
     }
 }

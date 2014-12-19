@@ -21,6 +21,13 @@ public final class Config
     public void load() throws Exception
     {
         File propertyFile = new File(this._configPath);
+        File propertyDir = new File(propertyFile.getParent());
+
+        if (!propertyDir.exists()) {
+            if (!propertyDir.mkdirs()) {
+                throw new Exception("Failed to create config file folder structure.");
+            }
+        }
 
         if (!propertyFile.exists()) {
             if (!propertyFile.createNewFile()) {

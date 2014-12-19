@@ -34,7 +34,7 @@ public class CommandArgument implements Cloneable
 
                 currentCommand.argument = arg.replaceFirst("-", "");
             } else if (currentCommand.value == null) { //is value
-                currentCommand.value = arg;
+                currentCommand.value += arg; //in-case the value has spaces in it, will be reset on net command anyway
             } else { //currentCommand was value for the currentCommand (x2) command
                 throw new ArgumentNotFoundException(arg);
             }

@@ -3,6 +3,7 @@ package com.mt.easytv;
 import com.mt.easytv.commands.ArgumentNotFoundException;
 import com.mt.easytv.commands.CommandArgument;
 import com.mt.easytv.commands.CommandHandler;
+import com.mt.easytv.commands.CommandNotFoundException;
 import com.mt.easytv.config.Config;
 
 import java.io.BufferedReader;
@@ -37,24 +38,19 @@ public final class Main
             try {
                 Main._commandHandler.read();
             } catch (ArgumentNotFoundException e) {
-                Main.error(e.getMessage());
-                Main.quit();
+                Main.message(e.getMessage());
+            } catch (CommandNotFoundException e) {
+                Main.message(e.getMessage());
             }
         }
     }
 
-    public static void quit()
+    public static void quit() //dummy function in-case extra functionality needed later
     {
-        try {
-            Main.Config.save();
-        } catch (IOException e) {
-            Main.error("Failed to save config " + e.getMessage());
-        }
-
         System.exit(0);
     }
 
-    public static void error(String error)
+    public static void message(String error) //dummy function in-case extra functionality needed later
     {
         System.out.println(error);
     }
@@ -66,6 +62,12 @@ public final class Main
             @Override
             public void run()
             {
+                try {
+                    Main.Config.save();
+                } catch (IOException e) {
+                    Main.message("Failed to save config " + e.getMessage());
+                }
+
                 Main._commandHandler.destroy();
             }
         });
@@ -86,11 +88,12 @@ public final class Main
         /* Config */
         Main._commandHandler.addCommand("setConfig", (CommandArgument[] args) -> {
             if (args.length < 1) {
-                Main.error("setConfig requires the config name and value.");
+                Main.message("setConfig requires the config name and value.");
                 return;
             }
 
             Main.Config.setValue(args[0].argument, args[0].value);
+            System.out.println("Config updated.");
         });
     }
 

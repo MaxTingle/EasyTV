@@ -59,11 +59,18 @@ public final class CommandHandler
         System.arraycopy(commandParts, 1, argumentParts, 0, commandParts.length - 1);
         CommandArgument[] args = CommandArgument.fromArray(argumentParts);
 
+        boolean commandRan = false;
+
         for (Command command : this._commands) {
             if (command.command.equals(commandParts[0])) {
                 command.processCommand(args);
+                commandRan = true;
                 break;
             }
+        }
+
+        if (!commandRan) {
+            throw new CommandNotFoundException(commandParts[0]);
         }
     }
 

@@ -2,7 +2,7 @@ package com.mt.easytv.commands;
 
 import java.util.ArrayList;
 
-public class CommandArgument implements Cloneable
+public final class CommandArgument implements Cloneable
 {
     public String argument;
     public String value;
@@ -49,7 +49,7 @@ public class CommandArgument implements Cloneable
         }
 
         /* Add last command */
-        if (currentCommand.argument != null) {
+        if (currentCommand.argument != null || currentCommand.value != null) {
             commandArguments.add(currentCommand);
         }
 

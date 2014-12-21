@@ -34,7 +34,7 @@ public final class Config
                 throw new Exception("Failed to create config file.");
             }
 
-            this.setDefault(false);
+            this.loadDefaults(false);
             this.save();
         } else if (propertyFile.isDirectory()) {
             throw new Exception("Config file path is a dir (" + propertyFile.getAbsolutePath() + ")");
@@ -69,7 +69,7 @@ public final class Config
         throw new Exception("Config item not found.");
     }
 
-    public void setDefault(boolean removeExisting)
+    public void loadDefaults(boolean removeExisting)
     {
         if (removeExisting) {
             this._properties.clear();
@@ -87,6 +87,18 @@ public final class Config
 
     public String getValue(String key)
     {
-        return this._properties.getProperty(key);
+        String value = this._properties.getProperty(key);
+
+        if(value == null) {
+            for(ConfigItem item : this._defaults) {
+                if(key.equals(item.key)) {
+                    value = item.value; //set property if in defaults and not already set
+                    this._properties.setProperty(key, value);
+                    break;
+                }
+            }
+        }
+
+        return value;
     }
 }

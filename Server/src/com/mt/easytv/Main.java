@@ -5,10 +5,13 @@ import com.mt.easytv.commands.CommandArgument;
 import com.mt.easytv.commands.CommandHandler;
 import com.mt.easytv.commands.CommandNotFoundException;
 import com.mt.easytv.config.Config;
+import com.mt.easytv.torrents.Torrent;
+import com.mt.easytv.torrents.TorrentLoader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 public final class Main
 {
@@ -77,7 +80,6 @@ public final class Main
     {
         Main.Config.addDefault("tmpRoot", "tmp");
         Main.Config.addDefault("tmpTorrents", "%1$stmp");
-        Main.Config.addDefault("torrentSearch", "https://oldpiratebay.org/search.php?q=%1$s}");
     }
 
     private static void _addCommands()
@@ -88,21 +90,55 @@ public final class Main
         /* Config */
         Main._commandHandler.addCommand("setConfig", (CommandArgument[] args) -> {
             if (args.length < 1) {
-                Main.message("setConfig requires the config name and value.");
+                Main.message("setConfig requires the config name and value. (-name \"value\")");
                 return;
             }
 
-            Main.Config.setValue(args[0].argument, args[0].value);
-            System.out.println("Config updated.");
+            for (CommandArgument arg : args) {
+                if (arg.value == null) {
+                    Main.message("Config item " + arg.argument + " not updated, value not given.");
+                    continue;
+                }
+
+                Main.Config.setValue(arg.argument, arg.value);
+            }
+
+            Main.message("Config updated.");
+        });
+
+        /* Torrent searching server side */
+        Main._commandHandler.addCommand("search", (CommandArgument[] args) -> {
+            CommandArgument searchIn = null;
+            CommandArgument searchFor = null;
+            for (CommandArgument arg : args) {
+                if (arg.argument.equals("searchIn")) {
+                    searchIn = arg;
+                } else if (arg.argument.equals("search")) {
+                    searchFor = arg;
+                }
+            }
+
+            if (searchIn == null || searchFor == null) {
+                Main.message("search requires the what to search for(-search \"to search for\") and where to search(-searchin \"piratebay, piratebaylocal\").");
+                return;
+            }
+
+            try {
+                ArrayList<Torrent> torrents = TorrentLoader.search(searchFor.value, searchIn.value.split(","));
+
+                for (Torrent torrent : torrents) {
+                    Main.message(torrent.name);
+                }
+            } catch (Exception e) {
+                Main.message(e.getMessage());
+            }
         });
     }
 
     private static void _processExecCommands(String[] args) throws Exception
     {
         for (String arg : args) {
-            if (arg.startsWith("-")) {
-                Main._commandHandler.processCommand(arg.replace("-", ""));
-            }
+            Main._commandHandler.processCommand(arg.startsWith("-") ? arg.replaceFirst("-", "") : arg);
         }
     }
 }

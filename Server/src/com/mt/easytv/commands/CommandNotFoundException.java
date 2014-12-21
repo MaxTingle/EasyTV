@@ -1,6 +1,6 @@
 package com.mt.easytv.commands;
 
-public class CommandNotFoundException extends Exception
+public final class CommandNotFoundException extends Exception
 {
     private String _command;
 

@@ -1,6 +1,6 @@
 package com.mt.easytv.commands;
 
-public class ArgumentNotFoundException extends Exception
+public final class ArgumentNotFoundException extends Exception
 {
     private String _value;
 

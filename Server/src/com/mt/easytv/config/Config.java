@@ -37,18 +37,18 @@ public final class Config
             this.loadDefaults(false);
             this.save();
         } else if (propertyFile.isDirectory()) {
-            throw new Exception("Config file path is a dir (" + propertyFile.getAbsolutePath() + ")");
+            throw new Exception("config file path is a dir (" + propertyFile.getAbsolutePath() + ")");
         }
 
         FileInputStream stream = new FileInputStream(this._configPath);
-        this._properties.load(stream);
+        this._properties.loadFromXML(stream);
         stream.close();
     }
 
     public void save() throws IOException
     {
         FileOutputStream stream = new FileOutputStream(this._configPath);
-        this._properties.store(stream, "Options for the application");
+        this._properties.storeToXML(stream, "Options for the application");
         stream.close();
     }
 
@@ -66,7 +66,7 @@ public final class Config
             }
         }
 
-        throw new Exception("Config item not found.");
+        throw new Exception("config item not found.");
     }
 
     public void loadDefaults(boolean removeExisting)

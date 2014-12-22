@@ -4,7 +4,7 @@ import com.mt.easytv.torrents.Torrent;
 
 import java.util.ArrayList;
 
-public class Kickass extends TorrentSource
+public final class Kickass implements TorrentSource
 {
     @Override
     public Torrent view(String url)

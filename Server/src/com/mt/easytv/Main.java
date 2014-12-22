@@ -17,7 +17,7 @@ public final class Main
 {
     private static final String CONFIG_PATH = "tmp/";
     private static final String CONFIG_NAME = "config.properties";
-    public static  Config         Config;
+    public static Config config;
     private static CommandHandler _commandHandler;
 
     public static void main(String[] args) throws Exception
@@ -25,10 +25,10 @@ public final class Main
         Main._initShutdownHook();
 
         /* Setup core */
-            /* Config */
-        Main.Config = new Config(Main.CONFIG_PATH + Main.CONFIG_NAME);
+            /* config */
+        Main.config = new Config(Main.CONFIG_PATH + Main.CONFIG_NAME);
         Main._addConfigDefaults();
-        Main.Config.load();
+        Main.config.load();
 
             /* Commands */
         Main._commandHandler = new CommandHandler();
@@ -44,6 +44,8 @@ public final class Main
                 Main.message(e.getMessage());
             } catch (CommandNotFoundException e) {
                 Main.message(e.getMessage());
+            } catch (Exception e) {
+                Main.error("Command reading error", e);
             }
         }
     }
@@ -58,6 +60,15 @@ public final class Main
         System.out.println(error);
     }
 
+    public static void error(String prefix, Exception e)
+    {
+        Main.message(prefix + e.getMessage());
+
+        for (StackTraceElement stack : e.getStackTrace()) {
+            Main.message("in " + stack.getFileName() + "." + stack.getClassName() + "." + stack.getMethodName() + " on line " + stack.getLineNumber());
+        }
+    }
+
     private static void _initShutdownHook()
     {
         Runtime.getRuntime().addShutdownHook(new Thread()
@@ -66,7 +77,7 @@ public final class Main
             public void run()
             {
                 try {
-                    Main.Config.save();
+                    Main.config.save();
                 } catch (IOException e) {
                     Main.message("Failed to save config " + e.getMessage());
                 }
@@ -78,8 +89,10 @@ public final class Main
 
     private static void _addConfigDefaults()
     {
-        Main.Config.addDefault("tmpRoot", "tmp");
-        Main.Config.addDefault("tmpTorrents", "%1$stmp");
+        Main.config.addDefault("tmpRoot", "tmp");
+        Main.config.addDefault("tmpTorrents", "torrents");
+        Main.config.addDefault("tpbIndex", "tpb index.txt");
+        Main.config.addDefault("matchThreshold", "60");
     }
 
     private static void _addCommands()
@@ -87,7 +100,27 @@ public final class Main
         /* Quit */
         Main._commandHandler.addCommand("quit", (CommandArgument[] args) -> Main.quit());
 
-        /* Config */
+        /* config */
+
+        /* get */
+        Main._commandHandler.addCommand("getConfig", (CommandArgument[] args) -> {
+            if (args.length < 1) {
+                Main.message("getConfig requires the config name");
+                return;
+            }
+
+            for (CommandArgument arg : args) {
+                String value = Main.config.getValue(arg.value);
+
+                if (value == null) {
+                    Main.message("Config item " + arg.value + " does not exist.");
+                } else {
+                    Main.message(arg.value + " = " + value);
+                }
+            }
+        });
+
+        /* set */
         Main._commandHandler.addCommand("setConfig", (CommandArgument[] args) -> {
             if (args.length < 1) {
                 Main.message("setConfig requires the config name and value. (-name \"value\")");
@@ -96,14 +129,19 @@ public final class Main
 
             for (CommandArgument arg : args) {
                 if (arg.value == null) {
-                    Main.message("Config item " + arg.argument + " not updated, value not given.");
+                    Main.message("config item " + arg.argument + " not updated, value not given.");
                     continue;
                 }
 
-                Main.Config.setValue(arg.argument, arg.value);
+                Main.config.setValue(arg.argument, arg.value);
             }
 
-            Main.message("Config updated.");
+            try {
+                Main.config.save(); //just in-case use the debugger close button which kills jvm completely
+                Main.message("Config updated.");
+            } catch (IOException e) {
+                Main.message("Config update failed " + e.getMessage());
+            }
         });
 
         /* Torrent searching server side */
@@ -119,7 +157,7 @@ public final class Main
             }
 
             if (searchIn == null || searchFor == null) {
-                Main.message("search requires the what to search for(-search \"to search for\") and where to search(-searchin \"piratebay, piratebaylocal\").");
+                Main.message("search requires the what to search for(-search \"to search for\") and where to search(-searchin \"piratebay, piratebaylocal, kickass\").");
                 return;
             }
 
@@ -127,10 +165,10 @@ public final class Main
                 ArrayList<Torrent> torrents = TorrentLoader.search(searchFor.value, searchIn.value.split(","));
 
                 for (Torrent torrent : torrents) {
-                    Main.message(torrent.name);
+                    Main.message(torrent.toString());
                 }
             } catch (Exception e) {
-                Main.message(e.getMessage());
+                Main.error("Error searching torrents: ", e);
             }
         });
     }

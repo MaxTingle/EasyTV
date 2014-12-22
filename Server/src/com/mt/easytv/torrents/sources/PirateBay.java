@@ -4,7 +4,7 @@ import com.mt.easytv.torrents.Torrent;
 
 import java.util.ArrayList;
 
-public class PirateBay extends TorrentSource
+public final class PirateBay implements TorrentSource
 {
 
     @Override

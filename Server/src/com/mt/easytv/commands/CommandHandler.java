@@ -55,6 +55,11 @@ public final class CommandHandler
     {
         /* Building up argument array */
         String[] commandParts = commandFull.split(" ");
+
+        if (commandParts.length < 1) {
+            throw new CommandNotFoundException("");
+        }
+
         String[] argumentParts = new String[commandParts.length - 1];
         System.arraycopy(commandParts, 1, argumentParts, 0, commandParts.length - 1);
         CommandArgument[] args = CommandArgument.fromArray(argumentParts);

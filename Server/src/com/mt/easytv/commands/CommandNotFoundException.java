@@ -4,14 +4,12 @@ public final class CommandNotFoundException extends Exception
 {
     private String _command;
 
-    public CommandNotFoundException(String command)
-    {
+    public CommandNotFoundException(String command) {
         this._command = command;
     }
 
     @Override
-    public String getMessage()
-    {
+    public String getMessage() {
         return "Command " + this._command + " not found.";
     }
 }

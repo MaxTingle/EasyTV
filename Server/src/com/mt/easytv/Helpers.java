@@ -8,12 +8,11 @@ import java.util.regex.Pattern;
 
 public class Helpers
 {
-    public static int matchPercent(String needle, String haystack)
-    {
+    public static double matchPercent(String needle, String haystack) {
         Pattern notAlphanumRegex = Pattern.compile("[^a-zA-Z0-9 \\|]"); //^ is not
-        haystack = notAlphanumRegex.matcher(haystack).replaceAll("");
+        haystack = notAlphanumRegex.matcher(haystack).replaceAll("").toLowerCase();
 
-        String[] needleParts = notAlphanumRegex.matcher(needle).replaceAll("").split(" ");
+        String[] needleParts = notAlphanumRegex.matcher(needle).replaceAll("").toLowerCase().split(" ");
 
         int matches = 0;
         for (String word : needleParts) {
@@ -25,8 +24,7 @@ public class Helpers
         return matches == 0 ? 0 : (matches / needleParts.length);
     }
 
-    public static String requestPage(String urlPath) throws Exception
-    {
+    public static String requestPage(String urlPath) throws Exception {
         URL url = new URL(urlPath);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 

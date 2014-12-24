@@ -9,18 +9,15 @@ public final class CommandHandler
     private ArrayList<Command>        _commands = new ArrayList<>();
     private ArrayList<BufferedReader> _readers  = new ArrayList<>();
 
-    public void addCommand(Command command)
-    {
+    public void addCommand(Command command) {
         this._commands.add(command);
     }
 
-    public void addCommand(String commandName, ICommand action)
-    {
+    public void addCommand(String commandName, ICommand action) {
         Command command = new Command()
         {
             @Override
-            public void processCommand(CommandArgument[] args)
-            {
+            public void processCommand(CommandArgument[] args) {
                 action.processCommand(args);
             }
         };
@@ -29,8 +26,7 @@ public final class CommandHandler
         this.addCommand(command);
     }
 
-    public boolean removeCommand(String commandName)
-    {
+    public boolean removeCommand(String commandName) {
         for (Command command : this._commands) {
             if (commandName.equals(command.command)) {
                 this.removeCommand(command);
@@ -41,8 +37,7 @@ public final class CommandHandler
         return false;
     }
 
-    public boolean removeCommand(Command command)
-    {
+    public boolean removeCommand(Command command) {
         if (!this._commands.contains(command)) {
             return false;
         }
@@ -51,8 +46,7 @@ public final class CommandHandler
         return true;
     }
 
-    public void processCommand(String commandFull) throws CommandNotFoundException, ArgumentNotFoundException
-    {
+    public void processCommand(String commandFull) throws CommandNotFoundException, ArgumentNotFoundException {
         /* Building up argument array */
         String[] commandParts = commandFull.split(" ");
 
@@ -79,13 +73,11 @@ public final class CommandHandler
         }
     }
 
-    public void addReader(BufferedReader reader)
-    {
+    public void addReader(BufferedReader reader) {
         this._readers.add(reader);
     }
 
-    public boolean removeReader(BufferedReader reader)
-    {
+    public boolean removeReader(BufferedReader reader) {
         if (!this._readers.contains(reader)) {
             return false;
         }
@@ -94,15 +86,13 @@ public final class CommandHandler
         return true;
     }
 
-    public void read() throws Exception
-    {
+    public void read() throws Exception {
         for (BufferedReader reader : this._readers) {
             this.readFrom(reader);
         }
     }
 
-    public void readFrom(BufferedReader reader) throws Exception
-    {
+    public void readFrom(BufferedReader reader) throws Exception {
         String line = reader.readLine();
 
         if (line != null) {
@@ -110,12 +100,12 @@ public final class CommandHandler
         }
     }
 
-    public void destroy()
-    {
+    public void destroy() {
         for (BufferedReader reader : this._readers) {
             try {
                 reader.close();
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 reader = null;
             }
         }

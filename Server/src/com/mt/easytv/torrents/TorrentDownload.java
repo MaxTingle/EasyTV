@@ -6,24 +6,20 @@ public class TorrentDownload
     private String _path;
     private String _torrentUrl;
 
-    public TorrentDownload(String torrentPath)
-    {
+    public TorrentDownload(String torrentPath) {
         this._torrentUrl = torrentPath;
     }
 
-    public void download()
-    {
+    public void download() {
         this.downloadTorrentFile();
         this.downloadTorrent();
     }
 
-    public void downloadTorrent()
-    {
+    public void downloadTorrent() {
 
     }
 
-    public void downloadTorrentFile()
-    {
+    public void downloadTorrentFile() {
 
     }
 }

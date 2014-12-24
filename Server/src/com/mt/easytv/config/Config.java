@@ -13,13 +13,11 @@ public final class Config
     private final ArrayList<ConfigItem> _defaults   = new ArrayList<>();
     private String _configPath;
 
-    public Config(String path)
-    {
+    public Config(String path) {
         this._configPath = path;
     }
 
-    public void load() throws Exception
-    {
+    public void load() throws Exception {
         File propertyFile = new File(this._configPath);
         File propertyDir = new File(propertyFile.getParent());
 
@@ -36,7 +34,8 @@ public final class Config
 
             this.loadDefaults(false);
             this.save();
-        } else if (propertyFile.isDirectory()) {
+        }
+        else if (propertyFile.isDirectory()) {
             throw new Exception("config file path is a dir (" + propertyFile.getAbsolutePath() + ")");
         }
 
@@ -45,20 +44,17 @@ public final class Config
         stream.close();
     }
 
-    public void save() throws IOException
-    {
+    public void save() throws IOException {
         FileOutputStream stream = new FileOutputStream(this._configPath);
         this._properties.storeToXML(stream, "Options for the application");
         stream.close();
     }
 
-    public void addDefault(String key, java.io.Serializable value)
-    {
+    public void addDefault(String key, java.io.Serializable value) {
         this._defaults.add(new ConfigItem(key, value.toString()));
     }
 
-    public void removeDefault(String key) throws Exception
-    {
+    public void removeDefault(String key) throws Exception {
         for (ConfigItem item : this._defaults) {
             if (item.key.equals(key)) {
                 this._defaults.remove(item);
@@ -69,8 +65,7 @@ public final class Config
         throw new Exception("config item not found.");
     }
 
-    public void loadDefaults(boolean removeExisting)
-    {
+    public void loadDefaults(boolean removeExisting) {
         if (removeExisting) {
             this._properties.clear();
         }
@@ -80,18 +75,16 @@ public final class Config
         }
     }
 
-    public void setValue(String key, java.io.Serializable value)
-    {
+    public void setValue(String key, java.io.Serializable value) {
         this._properties.setProperty(key, value.toString());
     }
 
-    public String getValue(String key)
-    {
+    public String getValue(String key) {
         String value = this._properties.getProperty(key);
 
-        if(value == null) {
-            for(ConfigItem item : this._defaults) {
-                if(key.equals(item.key)) {
+        if (value == null) {
+            for (ConfigItem item : this._defaults) {
+                if (key.equals(item.key)) {
                     value = item.value; //set property if in defaults and not already set
                     this._properties.setProperty(key, value);
                     break;

@@ -8,5 +8,5 @@ public interface TorrentSource
 {
     Torrent view(String url) throws Exception;
 
-    ArrayList<Torrent> search(String searchTerms) throws Exception;
+    ArrayList<Torrent> search(String searchTerms, boolean showProgress) throws Exception;
 }

@@ -7,14 +7,12 @@ import java.util.ArrayList;
 public final class Kickass implements TorrentSource
 {
     @Override
-    public Torrent view(String url)
-    {
+    public Torrent view(String url) {
         return null;
     }
 
     @Override
-    public ArrayList<Torrent> search(String searchTerms)
-    {
+    public ArrayList<Torrent> search(String searchTerms, boolean showProgress) {
         return null;
     }
 }

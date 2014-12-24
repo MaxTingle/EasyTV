@@ -8,18 +8,15 @@ public final class CommandArgument implements Cloneable
     public String value;
 
     /* No nullable params or default values, stupid java >_> */
-    public CommandArgument()
-    {
+    public CommandArgument() {
     }
 
-    public CommandArgument(String argument, String value)
-    {
+    public CommandArgument(String argument, String value) {
         this.argument = argument;
         this.value = value;
     }
 
-    public static CommandArgument[] fromArray(String[] args) throws ArgumentNotFoundException
-    {
+    public static CommandArgument[] fromArray(String[] args) throws ArgumentNotFoundException {
         ArrayList<CommandArgument> commandArguments = new ArrayList<>();
         CommandArgument currentCommand = new CommandArgument();
         boolean previousWasString = false;
@@ -35,15 +32,18 @@ public final class CommandArgument implements Cloneable
                 }
 
                 currentCommand.argument = arg.replaceFirst("-", "");
-            } else if (previousWasString || currentCommand.value == null) { //is value
+            }
+            else if (previousWasString || currentCommand.value == null) { //is value
                 currentCommand.value = (currentCommand.value == null ? "" : currentCommand.value) + (previousWasString ? " " : "") + arg.replace("\"", "");
 
                 if (arg.startsWith("\"")) {
                     previousWasString = true;
-                } else if (arg.endsWith("\"")) {
+                }
+                else if (arg.endsWith("\"")) {
                     previousWasString = false;
                 }
-            } else { //currentCommand was value for the currentCommand (x2) command
+            }
+            else { //currentCommand was value for the currentCommand (x2) command
                 throw new ArgumentNotFoundException(arg);
             }
         }
@@ -57,8 +57,7 @@ public final class CommandArgument implements Cloneable
     }
 
     @Override
-    public Object clone()
-    {
+    public Object clone() {
         return new CommandArgument(this.argument, this.value);
     }
 }

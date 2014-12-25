@@ -1,5 +1,7 @@
 package com.mt.easytv.commands;
 
+import com.mt.easytv.connection.Client;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,14 +15,29 @@ public final class CommandHandler
         this._commands.add(command);
     }
 
-    public void addCommand(String commandName, ICommand action) {
+    public void addCommand(CommandSource source, String commandName, ICommand action) {
         Command command = new Command()
         {
             @Override
-            public void processCommand(CommandArgument[] args) {
+            public void processCommand(CommandArgument[] args) throws Exception {
                 action.processCommand(args);
             }
         };
+        command.source = source;
+        command.command = commandName;
+
+        this.addCommand(command);
+    }
+
+    public void addCommand(CommandSource source, String commandName, IClientCommand action) {
+        Command command = new Command()
+        {
+            @Override
+            public Object processCommand(CommandArgument[] args, Client client) throws Exception {
+                return action.processCommand(args, client);
+            }
+        };
+        command.source = source;
         command.command = commandName;
 
         this.addCommand(command);
@@ -46,7 +63,7 @@ public final class CommandHandler
         return true;
     }
 
-    public void processCommand(String commandFull) throws CommandNotFoundException, ArgumentNotFoundException {
+    public void processCommand(String commandFull) throws Exception {
         /* Building up argument array */
         String[] commandParts = commandFull.split(" ");
 
@@ -61,7 +78,7 @@ public final class CommandHandler
         boolean commandRan = false;
 
         for (Command command : this._commands) {
-            if (command.command.equals(commandParts[0])) {
+            if (command.source == CommandSource.CLI && command.command.equals(commandParts[0])) {
                 command.processCommand(args);
                 commandRan = true;
                 break;
@@ -71,6 +88,27 @@ public final class CommandHandler
         if (!commandRan) {
             throw new CommandNotFoundException(commandParts[0]);
         }
+    }
+
+    public Object processCommand(String commandFull, Client client) throws Exception {
+        /* Building up argument array */
+        String[] commandParts = commandFull.split(" ");
+
+        if (commandParts.length < 1) {
+            throw new CommandNotFoundException("");
+        }
+
+        String[] argumentParts = new String[commandParts.length - 1];
+        System.arraycopy(commandParts, 1, argumentParts, 0, commandParts.length - 1);
+        CommandArgument[] args = CommandArgument.fromArray(argumentParts);
+
+        for (Command command : this._commands) {
+            if (command.source == CommandSource.CLIENT && command.command.equals(commandParts[0])) {
+                return command.processCommand(args, client);
+            }
+        }
+
+        throw new CommandNotFoundException(commandParts[0]);
     }
 
     public void addReader(BufferedReader reader) {
@@ -111,5 +149,11 @@ public final class CommandHandler
         }
 
         this._readers.clear();
+    }
+
+    public enum CommandSource
+    {
+        CLIENT,
+        CLI
     }
 }

@@ -4,8 +4,8 @@ public class Torrent
 {
     public  String          url;
     public  String          name;
-    public float size; //bytes
-    public int   seeders;
+    public  float           size; //bytes
+    public  int             seeders;
     public  int             leechers;
     public  int             age;
     private TorrentDownload _download;

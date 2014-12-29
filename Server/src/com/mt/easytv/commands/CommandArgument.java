@@ -23,8 +23,17 @@ public final class CommandArgument implements Cloneable
 
         /* For each of the command split via space */
         for (String arg : args) {
-            /* Is argument */
-            if (arg.startsWith("-")) {
+            if (previousWasString || (currentCommand.value == null && !arg.startsWith("-"))) { //is value, put first so will support - inside strings
+                currentCommand.value = (currentCommand.value == null ? "" : currentCommand.value) + (previousWasString ? " " : "") + arg.replace("\"", "");
+
+                if (arg.startsWith("\"") && !arg.endsWith("\"")) {
+                    previousWasString = true;
+                }
+                else if (arg.endsWith("\"")) {
+                    previousWasString = false;
+                }
+            }
+            else if (arg.startsWith("-")) { //is argument
                 if (currentCommand.argument != null) { //not new command
                     commandArguments.add((CommandArgument) currentCommand.clone());
                     currentCommand = new CommandArgument();
@@ -32,16 +41,6 @@ public final class CommandArgument implements Cloneable
                 }
 
                 currentCommand.argument = arg.replaceFirst("-", "");
-            }
-            else if (previousWasString || currentCommand.value == null) { //is value
-                currentCommand.value = (currentCommand.value == null ? "" : currentCommand.value) + (previousWasString ? " " : "") + arg.replace("\"", "");
-
-                if (arg.startsWith("\"")) {
-                    previousWasString = true;
-                }
-                else if (arg.endsWith("\"")) {
-                    previousWasString = false;
-                }
             }
             else { //currentCommand was value for the currentCommand (x2) command
                 throw new ArgumentNotFoundException(arg);

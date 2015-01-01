@@ -181,6 +181,7 @@ public class CLICommands
         try {
             Main.torrentManager.sort(sortBy, sortDir);
             Main.torrentManager.resetPageIndex();
+            Messager.message("Sort complete");
         }
         catch (Exception e) {
             Messager.message(e.getMessage());

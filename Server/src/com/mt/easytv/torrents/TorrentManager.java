@@ -107,13 +107,13 @@ public final class TorrentManager
 
         switch (sortMode) {
             case SEEDERS:
-                comparator = (Torrent t, Torrent t2) -> t.seeders >= t2.seeders ? greaterSort : lesserSort;
+                comparator = (Torrent t, Torrent t2) -> t.seeders == t2.seeders ? 0 : (t.seeders > t2.seeders ? greaterSort : lesserSort);
                 break;
             case LEECHERS:
-                comparator = (Torrent t, Torrent t2) -> t.leechers >= t2.leechers ? greaterSort : lesserSort;
+                comparator = (Torrent t, Torrent t2) -> t.leechers == t2.leechers ? 0 : (t.leechers > t2.leechers ? greaterSort : lesserSort);
                 break;
             case SIZE:
-                comparator = (Torrent t, Torrent t2) -> t.size >= t2.size ? greaterSort : lesserSort;
+                comparator = (Torrent t, Torrent t2) -> t.size == t2.size ? 0 : (t.size > t2.size ? greaterSort : lesserSort);
                 break;
         }
 

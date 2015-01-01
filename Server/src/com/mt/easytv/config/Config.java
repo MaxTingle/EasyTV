@@ -94,4 +94,18 @@ public final class Config
 
         return value;
     }
+
+    public String concatValues(String[] keys) {
+        String fullValue = "";
+
+        for (String key : keys) {
+            String value = this.getValue(key);
+
+            if (value != null) {
+                fullValue += value;
+            }
+        }
+
+        return fullValue;
+    }
 }

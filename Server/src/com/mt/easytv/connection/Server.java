@@ -9,22 +9,17 @@ import com.mt.easytv.interaction.Messager;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.SocketException;
 import java.util.ArrayList;
 
-public class Server extends Thread
+public class Server
 {
     private ArrayList<Client> _clients = new ArrayList<>();
     private ServerSocket _listener;
+    private Thread       _listenerThread;
     private boolean _listening = false;
 
     public Server() throws IOException {
         this._initListener();
-    }
-
-    @Override
-    public void run() {
-        Messager.message("Listener server thread started");
     }
 
     public void checkWaitingClients() throws IOException {
@@ -61,19 +56,35 @@ public class Server extends Thread
     }
 
     public void startListening() throws IOException {
-        if (this._listener.isClosed()) {
+        /* Setting up the listener */
+        if (this._listenerThread != null && this._listenerThread.isAlive()) {
+            Messager.message("Warning, startListening called when listener thread is still alive");
+            this.stopListening();
+        }
+        if (this._listener == null || this._listener.isClosed()) {
             this._initListener();
         }
 
-        Messager.message("listener server started");
-        while (this._listening) {
-            try {
-                this._clients.add(new Client(this._listener.accept()));
+        /* Start listening on a different thread to stop blocking */
+        this._listenerThread = new Thread(() ->
+                                          {
+                                              Messager.message("Listener server started");
+                                              this._listening = true;
+
+                                              while (this._listening) {
+                                                  try {
+                                                      this._clients.add(new Client(this._listener.accept()));
+                                                  }
+                                                  catch (IOException e) {
+                                                      if (this._listening) {
+                                                          Messager.error("Stopped listening while awaiting client ", e);
+                                                      }
+                                                  }
             }
-            catch (SocketException e) {
-                Messager.message("Stopped listening while awaiting client.");
-            }
-        }
+
+                                              Messager.message("Listener server stopped");
+                                          });
+        this._listenerThread.start();
     }
 
     public boolean isListening() {
@@ -82,7 +93,14 @@ public class Server extends Thread
 
     public void stopListening() throws IOException {
         this._listening = false;
-        this._listener.close();
+
+        if (this._listener != null) {
+            this._listener.close();
+        }
+
+        if (this._listenerThread != null) {
+            this._listenerThread.interrupt();
+        }
     }
 
     public ArrayList<Client> getClients() {

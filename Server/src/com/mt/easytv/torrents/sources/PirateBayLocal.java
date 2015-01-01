@@ -83,8 +83,9 @@ public final class PirateBayLocal implements TorrentSource
                 torrent.name = lineParts[structure.name];
                 torrent.seeders = Integer.parseInt(lineParts[structure.seeders]);
                 torrent.leechers = Integer.parseInt(lineParts[structure.leechers]);
-                torrent.size = Float.parseFloat(lineParts[structure.size]);
-                torrent.url = lineParts[structure.magnet];
+                torrent.size = Float.parseFloat(lineParts[structure.size]); //bytes
+                torrent.size = (torrent.size / 1024f) / 1024f; //MB
+                torrent.url = "magnet:?xt=urn:btih:" + lineParts[structure.magnet];
                 matches.add(torrent);
             }
 
@@ -101,7 +102,7 @@ public final class PirateBayLocal implements TorrentSource
             Messager.message("Skipped " + skipped + " during search");
         }
 
-        return matches; //empty
+        return matches;
     }
 
     private int _getTotalLines(FileReader reader) throws IOException {

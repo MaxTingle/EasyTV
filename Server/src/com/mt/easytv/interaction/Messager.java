@@ -1,6 +1,6 @@
 package com.mt.easytv.interaction;
 
-public class Messager
+public final class Messager
 {
     private static Message _message; //attaching of client is done so single point of communication for cli and server
 
@@ -23,22 +23,18 @@ public class Messager
     }
 
     public static void error(String prefix, Exception e) {
+        String message = prefix + e.getClass() + " exception " + e.getMessage();
+
+        for (StackTraceElement stack : e.getStackTrace()) {
+            message += "\nin " + stack.getFileName() + " " + stack.getClassName() + "." + stack.getMethodName() + " on line " + stack.getLineNumber();
+        }
+
         if (Messager._message != null) {
-            String message = prefix + e.getMessage();
-
-            for (StackTraceElement stack : e.getStackTrace()) {
-                message += "\nin " + stack.getFileName() + " " + stack.getClassName() + "." + stack.getMethodName() + " on line " + stack.getLineNumber();
-            }
-
             Messager._message.success = false;
             Messager._message.message = message;
         }
         else {
-            Messager.message(prefix + e.getMessage());
-
-            for (StackTraceElement stack : e.getStackTrace()) {
-                Messager.message("in " + stack.getFileName() + " " + stack.getClassName() + "." + stack.getMethodName() + " on line " + stack.getLineNumber());
-            }
+            Messager.message(message);
         }
     }
 }

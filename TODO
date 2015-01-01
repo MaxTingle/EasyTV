@@ -1,0 +1,20 @@
+SERVER:
+    OPTIMIZATIONS:
+        - piratebaylocal searching
+
+    IMPLEMENTATIONS:
+        - kickasstorrents searching
+        - piratebay searching
+        - TorrentManager loading torrents from the state. Could implement own state saving or hook into session listeners and create torrent from the handle.
+        - Torrent file viewing
+
+    FIXES:
+        - Code formatting
+
+    TESTS:
+        - Torrent downloading
+        - State saving and reloading
+        - Using finished thing directly from jar
+
+CLIENT:
+    ALL OF IT AGHRHRRHRH

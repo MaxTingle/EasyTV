@@ -2,9 +2,10 @@ package com.mt.easytv.commands;
 
 import com.mt.easytv.connection.Client;
 
-public abstract class Command implements ICommand, IClientCommand
+public class Command implements ICommand, IClientCommand
 {
     public String command = "";
+    public boolean allowNullArgument;
     public CommandHandler.CommandSource source;
 
     public void processCommand(CommandArgument[] args) throws Exception {

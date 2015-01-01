@@ -1,10 +1,14 @@
 package com.mt.easytv;
 
+import com.frostwire.jlibtorrent.TorrentInfo;
 import com.mt.easytv.commands.CommandArgument;
 import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.torrents.Torrent;
+import com.mt.easytv.torrents.TorrentDownload;
+import com.mt.easytv.torrents.TorrentState;
 import com.mt.easytv.torrents.sources.TorrentSourceNotFound;
 
+import java.io.File;
 import java.io.IOException;
 
 public class CLICommands
@@ -103,11 +107,11 @@ public class CLICommands
         Messager.message("Searching..");
 
         try {
-            int loadedCount = Main.torrentLoader.load(searchFor.value, searchIn.value.split(","), progress);
+            int loadedCount = Main.torrentManager.load(searchFor.value, searchIn.value.split(","), progress);
             Messager.message("Loaded " + loadedCount + " torrents");
 
             if (view) {
-                Main.commandHandler.processCommand("viewTorrents");
+                Main.commandHandler.processCommand("view");
             }
         }
         catch (TorrentSourceNotFound e) {
@@ -119,13 +123,13 @@ public class CLICommands
     }
 
     /**
-     * Viewing torrents
+     * Outputs a certain amount of the torrent's detail
      * optional:
-     * -size 10 **Specifies the number of torrents to load
+     * -size    **Specifies the number of torrents to load
      * -reset   **Resets the current index to 0
      */
-    public static void viewTorrents(CommandArgument[] args) {
-        if (!Main.torrentLoader.hasTorrents()) {
+    public static void view(CommandArgument[] args) {
+        if (!Main.torrentManager.hasTorrents()) {
             Messager.message("No torrents loaded");
             return;
         }
@@ -140,14 +144,146 @@ public class CLICommands
                 pageSize = Integer.parseInt(arg.value);
             }
             else if (arg.argument.equals("reset")) {
-                Main.torrentLoader.resetPageIndex();
+                Main.torrentManager.resetPageIndex();
             }
         }
 
-        Torrent[] torrents = Main.torrentLoader.next(pageSize);
+        Torrent[] torrents = Main.torrentManager.next(pageSize);
 
         for (Torrent torrent : torrents) {
             Messager.message(torrent.toString());
         }
+    }
+
+    /**
+     * Sorts the torrent manager torrents by a user specified variable
+     * -sortBy    **What to sort by [seeders,leechers,size]
+     * -sortDir   **What direction to sort [asc,desc]
+     */
+    public static void sort(CommandArgument[] args) {
+        String sortBy = null;
+        String sortDir = "desc";
+
+        for (CommandArgument arg : args) {
+            if (arg.argument.equals("sortBy")) { //== as argument can be null
+                sortBy = arg.value;
+            }
+            else if (arg.argument.equals("sortDir")) {
+                sortDir = arg.value;
+            }
+        }
+
+        if (sortBy == null) {
+            Messager.message("Sort requires the sortBy argument (sort -sortBy {sortMode} or sort {sortMode})");
+            return;
+        }
+
+        try {
+            Main.torrentManager.sort(sortBy, sortDir);
+            Main.torrentManager.resetPageIndex();
+        }
+        catch (Exception e) {
+            Messager.message(e.getMessage());
+        }
+    }
+
+    /**
+     * Outputs a single torrent's detail
+     * -id    **The ID of the torrent to view
+     */
+    public static void viewOne(CommandArgument[] args) {
+        Torrent torrent = CLICommands._torrentFromArgs(args, true);
+
+        if (torrent == null) {
+            return;
+        }
+
+        Messager.message(torrent.toString());
+    }
+
+    /**
+     * Starts a torrent downlaod
+     * -id      **The ID of the torrent to download
+     * -force   **Whether or not to force redownload
+     */
+    public static void download(CommandArgument[] args) throws Exception {
+        Torrent torrent = CLICommands._torrentFromArgs(args, true);
+        boolean force = false;
+
+        for (CommandArgument arg : args) {
+            if (arg.argument.equals("force")) {
+                force = true;
+                break;
+            }
+        }
+
+        if (torrent == null) {
+            return;
+        }
+        else if (torrent.getState() == null) {
+            torrent.loadState();
+        }
+
+        if (!force && torrent.getState() == TorrentState.DOWNLOADED) {
+            Messager.message("Torrent is already downloaded, add -force to redownload.");
+            return;
+        }
+        else if (torrent.getState() == TorrentState.ACTIONED) {
+            Messager.message("Torrent is in playback state.");
+            return;
+        }
+
+        if (torrent.getState() == TorrentState.DOWNLOADED) {
+            TorrentDownload download = torrent.getDownload();
+            TorrentInfo torrentInfo = download.getTorrentInfo();
+
+            if (torrentInfo == null) {
+                Messager.message("Torrent info not found.");
+                return;
+            }
+
+            int totalFiles = torrentInfo.getFiles().geNumFiles();
+
+            for (int i = 0; i < totalFiles; i++) {
+                File file = new File(torrentInfo.getFiles().getFilePath(i));
+
+                if (!file.delete()) {
+                    Messager.message("Failed to delete existing file " + file.getName());
+                    return;
+                }
+            }
+        }
+
+        torrent.getDownload().download((int percentCompleted) -> {
+            Messager.message("Torrent " + torrent.name + " download at " + torrent.getState() + " " + percentCompleted + "%");
+        });
+    }
+
+    private static Torrent _torrentFromArgs(CommandArgument[] args, boolean allowEmpty) {
+        String id = null;
+
+        for (CommandArgument arg : args) {
+            if (arg.argument == null) {
+                if (allowEmpty) { //sub if so else if doesn't need not null check
+                    id = arg.value; //so can just do {command} adfsdfsdf
+                }
+            }
+            else if (arg.argument.equals("id")) {
+                id = arg.value;
+            }
+        }
+
+        if (id == null) {
+            Messager.message("The torrent id is required. (viewOne -id {id} or viewOne {id})");
+            return null;
+        }
+
+        Torrent torrent = Main.torrentManager.get(id);
+
+        if (torrent == null) {
+            Messager.message("Torrent not found.");
+        }
+
+        return torrent;
     }
 }

@@ -1,6 +1,7 @@
 package com.mt.easytv;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -8,6 +9,37 @@ import java.util.regex.Pattern;
 
 public class Helpers
 {
+    public static long getDirSize(String dirPath) throws Exception {
+        return Helpers.getDirSize(new File(dirPath));
+    }
+
+    public static long getDirSize(File dir) throws Exception {
+        if (dir.exists()) {
+            return -1;
+        }
+        else if (dir.isFile()) {
+            throw new Exception("getDirSize passed file.");
+        }
+
+        File[] dirFiles = dir.listFiles();
+
+        if (dirFiles == null) {
+            throw new Exception("listFiles returned null.");
+        }
+
+        long dirSize = 0;
+        for (File dirFile : dirFiles) {
+            if (dirFile.isDirectory()) {
+                dirSize += Helpers.getDirSize(dirFile);
+            }
+            else {
+                dirSize += dirFile.length();
+            }
+        }
+
+        return dirSize;
+    }
+
     public static double matchPercent(String needle, String haystack) {
         Pattern notAlphanumRegex = Pattern.compile("[^a-zA-Z0-9 \\|]"); //^ is not
         haystack = notAlphanumRegex.matcher(haystack).replaceAll("").toLowerCase();

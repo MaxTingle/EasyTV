@@ -4,15 +4,26 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/src/META-INF" />
     </content>
-    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
+    <orderEntry type="jdk" jdkName="1.8 (32bit)" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library name="ttorrent">
+    <orderEntry type="module-library" exported="">
+      <library name="jlibtorrent">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/libs/ttorrent.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/frostwire-jlibtorrent.jar!/" />
         </CLASSES>
         <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library name="libtorrent">
+        <CLASSES />
+        <JAVADOC />
+        <NATIVE>
+          <root url="file://$MODULE_DIR$/libs/ext" />
+        </NATIVE>
         <SOURCES />
       </library>
     </orderEntry>

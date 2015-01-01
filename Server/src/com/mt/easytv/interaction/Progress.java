@@ -1,6 +1,6 @@
 package com.mt.easytv.interaction;
 
-public class Progress
+public final class Progress
 {
     private double _total;
     private double _processed = 0;

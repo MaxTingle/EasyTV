@@ -6,7 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public final class CommandHandler
+public final class CommandHandler extends Thread
 {
     private ArrayList<Command>        _commands = new ArrayList<>();
     private ArrayList<BufferedReader> _readers  = new ArrayList<>();
@@ -16,6 +16,10 @@ public final class CommandHandler
     }
 
     public void addCommand(CommandSource source, String commandName, ICommand action) {
+        this.addCommand(source, commandName, action, true);
+    }
+
+    public void addCommand(CommandSource source, String commandName, ICommand action, boolean allowNullArgument) {
         Command command = new Command()
         {
             @Override
@@ -25,11 +29,16 @@ public final class CommandHandler
         };
         command.source = source;
         command.command = commandName;
+        command.allowNullArgument = allowNullArgument;
 
         this.addCommand(command);
     }
 
     public void addCommand(CommandSource source, String commandName, IClientCommand action) {
+        this.addCommand(source, commandName, action, true);
+    }
+
+    public void addCommand(CommandSource source, String commandName, IClientCommand action, boolean allowNullArgument) {
         Command command = new Command()
         {
             @Override
@@ -39,6 +48,7 @@ public final class CommandHandler
         };
         command.source = source;
         command.command = commandName;
+        command.allowNullArgument = allowNullArgument;
 
         this.addCommand(command);
     }
@@ -79,6 +89,7 @@ public final class CommandHandler
 
         for (Command command : this._commands) {
             if (command.source == CommandSource.CLI && command.command.equals(commandParts[0])) {
+                this._processCommandArguments(command, args);
                 command.processCommand(args);
                 commandRan = true;
                 break;
@@ -104,6 +115,7 @@ public final class CommandHandler
 
         for (Command command : this._commands) {
             if (command.source == CommandSource.CLIENT && command.command.equals(commandParts[0])) {
+                this._processCommandArguments(command, args);
                 return command.processCommand(args, client);
             }
         }
@@ -138,17 +150,22 @@ public final class CommandHandler
         }
     }
 
-    public void destroy() {
+    public void clearListeners() throws IOException {
         for (BufferedReader reader : this._readers) {
-            try {
-                reader.close();
-            }
-            catch (IOException e) {
-                reader = null;
-            }
+            reader.close();
         }
 
         this._readers.clear();
+    }
+
+    private void _processCommandArguments(Command command, CommandArgument[] args) throws ArgumentNotFoundException {
+        if (!command.allowNullArgument) {
+            for (CommandArgument arg : args) {
+                if (arg.argument == null) {
+                    throw new ArgumentNotFoundException(arg.value, command);
+                }
+            }
+        }
     }
 
     public enum CommandSource

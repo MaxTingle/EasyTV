@@ -9,7 +9,9 @@ import com.mt.easytv.commands.CommandNotFoundException;
 import com.mt.easytv.config.Config;
 import com.mt.easytv.connection.Server;
 import com.mt.easytv.interaction.Messager;
+import com.mt.easytv.torrents.Torrent;
 import com.mt.easytv.torrents.TorrentManager;
+import com.mt.easytv.torrents.TorrentState;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,18 +37,22 @@ public final class Main
 
         /* Setup core */
             /* config */
+        Messager.message("Loading config..");
         Main.config = new Config(Main.CONFIG_PATH + "/" + Main.CONFIG_NAME);
         Main._addConfigDefaults();
         Main.config.load();
+        Messager.message("Config loaded");
 
             /* Commands */
+        Messager.message("Starting command processor..");
         Main.commandHandler.start(); //start its thread, on its own thread so it can listen
         Main._addCommands();
         Main._processExecCommands(args);
         Main.commandHandler.addReader(new BufferedReader(new InputStreamReader(System.in)));
+        Messager.message("Command processor ready");
 
         /* Setup JLibtorrent */
-        Messager.message("Initializing JLibTorrent components");
+        Messager.message("Loading JLibTorrent components..");
         Main._initJLibTorrent();
         Messager.message("JLibTorrent initialization complete");
 
@@ -109,13 +115,19 @@ public final class Main
                     Messager.error("Failed to stop listener server ", e);
                 }
 
+                /* Save resume data */
+                for (Torrent torrent : Main.torrentManager.getDownloadingTorrents()) {
+                    if (torrent.getState() == TorrentState.DOWNLOADING) {
+                        torrent.getDownload().getHandle().saveResumeData();
+                    }
+                }
+
                 /* Save the current state of the downloader */
                 try {
                     Messager.message("Saving torrent downloader state");
 
                     byte[] stateBytes = Main.torrentSession.saveState();
-                    Path statePath = Paths.get(Main.config.concatValues(new String[]{"storage", "session"}));
-                    Files.write(statePath, stateBytes);
+                    Files.write(Main._getSaveStatePath(), stateBytes);
 
                     Messager.message("Torrent downloader state saved");
                 }
@@ -137,13 +149,16 @@ public final class Main
         Main.torrentDownloader = new Downloader(Main.torrentSession);
         Main.dhtServer = new DHT(Main.torrentSession);
 
+        /* Setup the sync manager that maintains contact between the server and clients and handles errors */
+        Main.torrentSession.addListener(new TorrentSyncManager());
+
         /* Start the DHT server for fetching magnetdata from hash */
         Messager.message("DHT waiting for nodes");
         Main.dhtServer.waitNodes(1);
         Messager.message("DHT found " + Main.dhtServer.nodes() + " nodes");
 
         /* Load the previous state of the downloader */
-        Path statePath = Paths.get(Main.config.concatValues(new String[]{"storage", "session"}));
+        Path statePath = Main._getSaveStatePath();
 
         if (statePath.toFile().exists()) {
             Messager.message("Attempting to read downloader saved state.");
@@ -171,10 +186,10 @@ public final class Main
         Main.config.addDefault("torrentCache", "torrents");
         Main.config.addDefault("torrentFiles", "torrentsData");
         Main.config.addDefault("torrentResume", "torrentsInProgress");
-        Main.config.addDefault("session", "torrentsession.session");
+        Main.config.addDefault("session", "downloadState.session");
 
         /* TPB local */
-        Main.config.addDefault("tpbIndex", "tpb index.txt");
+        Main.config.addDefault("tpbIndex", "storage/tpbindex.txt");
 
         /* Searching options */
         Main.config.addDefault("idSize", "30");
@@ -183,8 +198,9 @@ public final class Main
 
         /* Downloading options */
         Main.config.addDefault("magnetTimeout", "30000");
-        Main.config.addDefault("downloadLimit", "1024");
-        Main.config.addDefault("uploadLimit", "100");
+        Main.config.addDefault("seedAfterDownload", "false");
+        Main.config.addDefault("downloadLimit", 1024 * 1024 * 1024); //1024MB, because why not
+        Main.config.addDefault("uploadLimit", (1024 * 1024 * 1024) / 4); //250MB
     }
 
     private static void _addCommands() {
@@ -196,11 +212,16 @@ public final class Main
         Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "view", CLICommands::view);
         Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "viewOne", CLICommands::viewOne);
         Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "download", CLICommands::download);
+        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "delete", CLICommands::delete);
     }
 
     private static void _processExecCommands(String[] args) throws Exception {
         for (String arg : args) {
             Main.commandHandler.processCommand(arg.startsWith("-") ? arg.replaceFirst("-", "") : arg);
         }
+    }
+
+    private static Path _getSaveStatePath() {
+        return Paths.get(Main.config.concatValues(new String[]{"storage", "session"}, "//"));
     }
 }

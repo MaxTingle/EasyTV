@@ -75,14 +75,17 @@ public class CLICommands
      * -search   "search terms"                     **The keywords to search for
      * -searchIn [piratebay,piratebaylocal,kickass] **The sources of torrents to look in
      * optional:
-     * -view     **Displays the first 10 torrents after loading
+     * -view     **Displays n torrents. May pass the number to view or none in which case will use default
      * -progress **Shows progress as loading
+     * -sortBy   **What to sort by, must be desc
      */
     public static void search(CommandArgument[] args) {
         CommandArgument searchIn = null;
         CommandArgument searchFor = null;
-        boolean view = false;
+
         boolean progress = false;
+        int view = 0;
+        String sortBy = null;
 
         for (CommandArgument arg : args) {
             if (arg.argument.equals("searchIn")) {
@@ -92,10 +95,18 @@ public class CLICommands
                 searchFor = arg;
             }
             else if (arg.argument.equals("view")) {
-                view = true;
+                if (arg.value != null) {
+                    view = Integer.parseInt(arg.value);
+                }
+                else {
+                    view = Integer.parseInt(Main.config.getValue("defaultTorrentListSize"));
+                }
             }
             else if (arg.argument.equals("progress")) {
                 progress = true;
+            }
+            else if (arg.argument.equals("sortBy")) {
+                sortBy = arg.value;
             }
         }
 
@@ -110,8 +121,11 @@ public class CLICommands
             int loadedCount = Main.torrentManager.load(searchFor.value, searchIn.value.split(","), progress);
             Messager.message("Loaded " + loadedCount + " torrents");
 
-            if (view) {
-                Main.commandHandler.processCommand("view");
+            if (sortBy != null) {
+                Main.commandHandler.processCommand("sort -sortBy " + sortBy);
+            }
+            if (view > 0) {
+                Main.commandHandler.processCommand("view " + view);
             }
         }
         catch (TorrentSourceNotFound e) {
@@ -196,10 +210,29 @@ public class CLICommands
         Torrent torrent = CLICommands._torrentFromArgs(args, true);
 
         if (torrent == null) {
-            return;
+            Messager.message("Torrent not found.");
         }
+        else {
+            Messager.message(torrent.toString());
+        }
+    }
 
-        Messager.message(torrent.toString());
+    /**
+     * Deletes a torrent's data
+     * -id    **The ID of the torrent to delete
+     */
+    public static void delete(CommandArgument[] args) throws Exception {
+        Torrent torrent = CLICommands._torrentFromArgs(args, true);
+
+        if (torrent == null) {
+            Messager.message("Torrent not found.");
+        }
+        else if (torrent.getDownload().deleteFiles()) {
+            Messager.message("Torrent files deleted.");
+        }
+        else {
+            Messager.message("Torrent files failed to delete.");
+        }
     }
 
     /**
@@ -212,7 +245,7 @@ public class CLICommands
         boolean force = false;
 
         for (CommandArgument arg : args) {
-            if (arg.argument.equals("force")) {
+            if (arg.argument != null && arg.argument.equals("force")) {
                 force = true;
                 break;
             }
@@ -256,7 +289,8 @@ public class CLICommands
         }
 
         torrent.getDownload().download((int percentCompleted) -> {
-            Messager.message("Torrent " + torrent.name + " download at " + torrent.getState() + " " + percentCompleted + "%");
+            String percentStr = torrent.getState() == TorrentState.DOWNLOADING ? percentCompleted + "%" : "";
+            Messager.message("Downloading: " + torrent.name + " download at " + torrent.getState() + " " + percentStr);
         });
     }
 

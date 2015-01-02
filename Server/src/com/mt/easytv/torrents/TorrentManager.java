@@ -157,6 +157,18 @@ public final class TorrentManager
         return this._torrents;
     }
 
+    public Torrent[] getDownloadingTorrents() {
+        ArrayList<Torrent> downloadingTorrents = new ArrayList<>();
+
+        this._torrents.forEach((Torrent torrent) -> {
+            if(torrent.getState() == TorrentState.DOWNLOADING || torrent.getState() == TorrentState.DOWNLOADING_META) {
+                downloadingTorrents.add(torrent);
+            }
+        });
+
+        return downloadingTorrents.toArray(new Torrent[downloadingTorrents.size()]);
+    }
+
     /**
      * Gets a single Torrent from the internal torrents array, based upon id
      *

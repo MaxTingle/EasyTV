@@ -1,9 +1,9 @@
 package com.mt.easytv.torrents.sources;
 
-import com.mt.easytv.Helpers;
 import com.mt.easytv.Main;
 import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.interaction.Progress;
+import com.mt.easytv.torrents.Helpers;
 import com.mt.easytv.torrents.Torrent;
 
 import java.io.BufferedReader;
@@ -83,8 +83,7 @@ public final class PirateBayLocal implements TorrentSource
                 torrent.name = lineParts[structure.name];
                 torrent.seeders = Integer.parseInt(lineParts[structure.seeders]);
                 torrent.leechers = Integer.parseInt(lineParts[structure.leechers]);
-                torrent.size = Float.parseFloat(lineParts[structure.size]); //bytes
-                torrent.size = (torrent.size / 1024f) / 1024f; //MB
+                torrent.size = Helpers.byteToMB(Float.parseFloat(lineParts[structure.size])); //bytes
                 torrent.url = "magnet:?xt=urn:btih:" + lineParts[structure.magnet];
                 matches.add(torrent);
             }

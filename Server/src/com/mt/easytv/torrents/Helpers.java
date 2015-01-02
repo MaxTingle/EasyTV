@@ -1,4 +1,4 @@
-package com.mt.easytv;
+package com.mt.easytv.torrents;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,7 +14,7 @@ public class Helpers
     }
 
     public static long getDirSize(File dir) throws Exception {
-        if (dir.exists()) {
+        if (!dir.exists()) {
             return -1;
         }
         else if (dir.isFile()) {
@@ -75,5 +75,22 @@ public class Helpers
 
         in.close();
         return response;
+    }
+
+    public static float byteToMB(int bytes) {
+        return Helpers.byteToMB((float) bytes);
+    }
+
+    public static float byteToMB(double bytes) {
+        return Helpers.byteToMB((float) bytes);
+    }
+
+    public static float byteToMB(long bytes) {
+        return Helpers.byteToMB((float) bytes);
+    }
+
+    public static float byteToMB(float bytes) {
+        float converted = (bytes / 1024f) / 1024f;
+        return converted < 0 ? 0 : converted;
     }
 }

@@ -4,9 +4,8 @@ import com.frostwire.jlibtorrent.TorrentAlertAdapter;
 import com.frostwire.jlibtorrent.TorrentHandle;
 import com.frostwire.jlibtorrent.TorrentInfo;
 import com.frostwire.jlibtorrent.Utils;
-import com.frostwire.jlibtorrent.alerts.PieceFinishedAlert;
+import com.frostwire.jlibtorrent.alerts.BlockFinishedAlert;
 import com.frostwire.jlibtorrent.alerts.TorrentFinishedAlert;
-import com.mt.easytv.Helpers;
 import com.mt.easytv.Main;
 
 import java.io.File;
@@ -17,6 +16,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 
 public class TorrentDownload
 {
@@ -77,7 +77,7 @@ public class TorrentDownload
     }
 
     public void downloadTorrent() throws Exception {
-        this._torrent._state = TorrentState.DOWNLOADING;
+        this._updateState(TorrentState.DOWNLOADING);
 
         /* loading the torrent handle from the file */
         if (this._torrentHandle != null) {
@@ -98,29 +98,42 @@ public class TorrentDownload
         }
 
         File resumeFile = new File(this.getResumePath());
+
+        if (!resumeFile.exists()) {
+            /* Make folder structure */
+            if (!resumeFile.getParentFile().exists() && !resumeFile.getParentFile().mkdirs()) {
+                throw new Exception("Failed to create resume file dir structure.");
+            }
+
+            /* Make file */
+            if (!resumeFile.createNewFile()) {
+                throw new Exception("Failed to create resume file");
+            }
+        }
+
         this._torrentHandle = Main.torrentSession.addTorrent(this._torrentInfo, saveDir, null, resumeFile);
         this._torrentHandle.setDownloadLimit(Integer.parseInt(Main.config.getValue("downloadLimit")));
         this._torrentHandle.setUploadLimit(Integer.parseInt(Main.config.getValue("uploadLimit")));
+        TorrentDownload self = this;
 
-        TorrentDownload self = this; //preserve scope, just as bad as javascript. IMPLEMENT DELEGATES GOD DAMNIT.
-
-        Main.torrentSession.addListener(new TorrentAlertAdapter(this._torrentHandle)
+        Main.torrentSession.addListener(new TorrentAlertAdapter(this._torrentHandle) //torrentalertadapter checks the torrent handler for us
         {
             @Override
             public void torrentFinished(TorrentFinishedAlert alert) {
-                if (alert.getHandle() == self._torrentHandle) {
-                    self._updateState(TorrentState.DOWNLOADED);
+                self._updateState(TorrentState.DOWNLOADED);
+
+                if (Main.config.getValue("seedAfterDownload").equals("false")) {
+                    self._torrentHandle.pause();
                 }
             }
 
             @Override
-            public void pieceFinished(PieceFinishedAlert alert) {
-                if (alert.getHandle() == self._torrentHandle) {
-                    self._updateState((alert.getPieceIndex() * 100) / self._torrentInfo.getNumPieces());
-                }
+            public void blockFinished(BlockFinishedAlert alert) {
+                self._updateState((int) (self._torrentHandle.getStatus().getProgress() * 100));
             }
         });
 
+        this._torrentHandle.resume();
     }
 
     public boolean isDownloading() {
@@ -149,9 +162,17 @@ public class TorrentDownload
         }
 
         TorrentInfo info = this.getTorrentInfo();
-        int totalFiles = info.getFiles().geNumFiles();
-        for (int i = 0; i < totalFiles; i++) {
-            File file = new File(info.getFiles().getFilePath(i));
+
+        if (info == null) {
+            return false;
+        }
+        else if (!this.getSaveDir().exists()) { //won't be null if info isn't null
+            return false;
+        }
+
+        File[] files = this.getFiles();
+        for (int i = 0; i < files.length; i++) {
+            File file = files[i];
 
             if (!file.exists()) {
                 return false; //file doesn't exists
@@ -159,7 +180,7 @@ public class TorrentDownload
             else if (!file.isDirectory() && info.getFiles().getFileSize(i) > file.length()) {
                 return false; //file size is less
             }
-            else if (info.getFiles().getFileSize(i) > Helpers.getDirSize(file)) {
+            else if (file.isDirectory() && info.getFiles().getFileSize(i) > Helpers.getDirSize(file)) {
                 return false;
             }
         }
@@ -173,6 +194,47 @@ public class TorrentDownload
             this._torrentHandle = null;
         }
         this._torrentInfo = null;
+    }
+
+    public boolean deleteFiles() throws Exception {
+        if (this._torrentInfo == null && this.getTorrentInfo() == null) {
+            return false;
+        }
+        else if (this._torrentHandle != null && (this._torrentHandle.getStatus().isSeeding() || (!this._torrentHandle.getStatus().isFinished() && !this._torrentHandle.getStatus().isPaused()))) {
+            return false;
+        }
+
+        File[] torrentFiles = this.getFiles();
+        for (File file : torrentFiles) {
+            if (file.exists() && !file.delete()) {
+                return false;
+            }
+        }
+
+        File saveDir = this.getSaveDir();
+        File[] saveDirFiles = saveDir.listFiles();
+        if (saveDir.exists() && (saveDirFiles == null || saveDirFiles.length == 0)) {
+            if (!saveDir.delete()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public File[] getFiles() throws Exception {
+        if (this.getTorrentInfo() == null) {
+            return null;
+        }
+
+        int fileCount = this._torrentInfo.getFiles().geNumFiles();
+        File[] files = new File[fileCount];
+
+        for (int i = 0; i < fileCount; i++) {
+            files[i] = new File(this.getDownloadDir() + "\\" + this._torrentInfo.getFileAt(i).getPath());
+        }
+
+        return files;
     }
 
     public TorrentHandle getHandle() {
@@ -192,16 +254,42 @@ public class TorrentDownload
         return this._torrentInfo;
     }
 
+    public File getSaveDir() throws Exception {
+        if (this.getTorrentInfo() == null) {
+            return null;
+        }
+
+        return new File(this.getDownloadDir() + "\\" + this.getTorrentInfo().getName());
+    }
+
     public String getMetaPath() {
-        return Main.config.concatValues(new String[]{"storage", "torrentCache"}) + this._torrent.url.replaceAll("[^0-9a-zA-Z-.,;_]", "") + ".torrent";
+        return Main.config.concatValues(new String[]{"storage", "torrentCache"}, "\\") + "\\" + this._torrent.getUniqueName() + ".torrent";
     }
 
     public String getDownloadDir() {
-        return Main.config.concatValues(new String[]{"storage", "torrentFiles"});
+        return Main.config.concatValues(new String[]{"storage", "torrentFiles"}, "\\");
     }
 
     public String getResumePath() {
-        return Main.config.concatValues(new String[]{"storage", "torrentResume"}) + this._torrent.url.replaceAll("[^0-9a-zA-Z-.,;_]", "");
+        return Main.config.concatValues(new String[]{"storage", "torrentResume"}, "\\") + "\\" + this._torrent.getUniqueName() + ".resume";
+    }
+
+    public String toString() {
+        if (this._torrentHandle == null || this._torrentInfo == null) {
+            return null;
+        }
+
+        return "Created by: " + this._torrentInfo.getCreator() +
+               " on " + (new Date((long) this._torrentInfo.getCreationDate() * 1000)).toString() +
+               "\nTrackers: " + this._torrentInfo.getTrackers().size() +
+               " peers: " + this._torrentHandle.getStatus().getNumPeers() +
+               " seeds: " + this._torrentHandle.getStatus().getNumSeeds() +
+               "\nDownloaded: " + (int) Helpers.byteToMB(this._torrentHandle.getStatus().getTotalDownload()) + "MB" +
+               " Downloading at: " + (int) Helpers.byteToMB(this._torrentHandle.getStatus().getDownloadRate()) + "MB/s" +
+               " limited to " + (int) Helpers.byteToMB(this._torrentHandle.getDownloadLimit()) +
+               "\nUploaded: " + (int) Helpers.byteToMB(this._torrentHandle.getStatus().getTotalUpload()) + "MB" +
+               " Uploading at: " + (int) Helpers.byteToMB(this._torrentHandle.getStatus().getUploadRate()) + "MB/s" +
+               " limited to " + (int) Helpers.byteToMB(this._torrentHandle.getUploadLimit());
     }
 
     private void _updateState(TorrentState state) {

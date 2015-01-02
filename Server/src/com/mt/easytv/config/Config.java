@@ -96,13 +96,17 @@ public final class Config
     }
 
     public String concatValues(String[] keys) {
+        return this.concatValues(keys, "");
+    }
+
+    public String concatValues(String[] keys, String delimiter) {
         String fullValue = "";
 
         for (String key : keys) {
             String value = this.getValue(key);
 
             if (value != null) {
-                fullValue += value;
+                fullValue += (fullValue.equals("") ? "" : delimiter) + value;
             }
         }
 

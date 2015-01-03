@@ -74,39 +74,19 @@ public final class CommandHandler extends Thread
     }
 
     public void processCommand(String commandFull) throws Exception {
-        /* Building up argument array */
-        String[] commandParts = commandFull.split(" ");
-
-        if (commandParts.length < 1) {
-            throw new CommandNotFoundException("");
-        }
-
-        String[] argumentParts = new String[commandParts.length - 1];
-        System.arraycopy(commandParts, 1, argumentParts, 0, commandParts.length - 1);
-        CommandArgument[] args = CommandArgument.fromArray(argumentParts);
-
-        boolean commandRan = false;
-
-        for (Command command : this._commands) {
-            if (command.source == CommandSource.CLI && command.command.equals(commandParts[0])) {
-                this._processCommandArguments(command, args);
-                command.processCommand(args);
-                commandRan = true;
-                break;
-            }
-        }
-
-        if (!commandRan) {
-            throw new CommandNotFoundException(commandParts[0]);
-        }
+        this._processCommand(commandFull, null, false);
     }
 
     public Object processCommand(String commandFull, Client client) throws Exception {
+        return this._processCommand(commandFull, client, true);
+    }
+
+    private Object _processCommand(String commandFull, Client client, boolean isClientCommand) throws Exception {
         /* Building up argument array */
         String[] commandParts = commandFull.split(" ");
 
         if (commandParts.length < 1) {
-            throw new CommandNotFoundException("");
+            throw new CommandNotFoundException(commandFull);
         }
 
         String[] argumentParts = new String[commandParts.length - 1];
@@ -114,9 +94,21 @@ public final class CommandHandler extends Thread
         CommandArgument[] args = CommandArgument.fromArray(argumentParts);
 
         for (Command command : this._commands) {
-            if (command.source == CommandSource.CLIENT && command.command.equals(commandParts[0])) {
+            if (command.command.equals(commandParts[0]) &&
+                (
+                        (command.source == CommandSource.CLIENT && isClientCommand) ||
+                        (command.source == CommandSource.CLI && !isClientCommand)
+                )) {
+
                 this._processCommandArguments(command, args);
-                return command.processCommand(args, client);
+
+                if(isClientCommand) {
+                    return command.processCommand(args, client);
+                }
+                else {
+                    command.processCommand(args);
+                    return null;
+                }
             }
         }
 
@@ -143,14 +135,16 @@ public final class CommandHandler extends Thread
     }
 
     public void readFrom(BufferedReader reader) throws Exception {
-        String line = reader.readLine();
+        if(reader.ready()) {
+            String line = reader.readLine();
 
-        if (line != null) {
-            this.processCommand(line);
+            if (line != null) {
+                this.processCommand(line);
+            }
         }
     }
 
-    public void clearListeners() throws IOException {
+    public void clearReaders() throws IOException {
         for (BufferedReader reader : this._readers) {
             reader.close();
         }

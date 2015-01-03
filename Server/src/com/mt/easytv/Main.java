@@ -34,41 +34,41 @@ public final class Main
 
     public static void main(String[] args) throws Exception {
         Main._initShutdownHook();
+        Messager.init();
 
-        /* Setup core */
-            /* config */
-        Messager.message("Loading config..");
+        /* Config */
+        Messager.immediateMessage("Loading config..");
         Main.config = new Config(Main.CONFIG_PATH + "/" + Main.CONFIG_NAME);
         Main._addConfigDefaults();
         Main.config.load();
-        Messager.message("Config loaded");
+        Messager.immediateMessage("Config loaded");
 
-            /* Commands */
-        Messager.message("Starting command processor..");
-        Main.commandHandler.start(); //start its thread, on its own thread so it can listen
+        /* Setup JLibtorrent */
+        Messager.immediateMessage("Loading JLibTorrent components..");
+        Main._initJLibTorrent();
+        Messager.immediateMessage("JLibTorrent initialization complete");
+
+        /* Commands */
+        Messager.message("Command handler starting..");
         Main._addCommands();
         Main._processExecCommands(args);
         Main.commandHandler.addReader(new BufferedReader(new InputStreamReader(System.in)));
-        Messager.message("Command processor ready");
+        Messager.message("Command handler ready..");
 
-        /* Setup JLibtorrent */
-        Messager.message("Loading JLibTorrent components..");
-        Main._initJLibTorrent();
-        Messager.message("JLibTorrent initialization complete");
-
-        /* Create listener */
+        /* Client listener */
         Main._server = new Server();
         Main._server.startListening();
 
-        int sleepTime = Integer.parseInt(Main.config.getValue("sleepTime")); //experimental to try free up the cpu some of the time
+        int sleepTime = Integer.parseInt(Main.config.getValue("sleepTime"));
+        Messager.startRedrawing(Integer.parseInt(Main.config.getValue("redrawTime")));
 
         /* Process commands, etc */
         while (true) {
             try {
-                Main.commandHandler.read();
+                Main.commandHandler.read(); //if there are commands then these are blocking, this is so we don't overflow the pi's memory doing multiple searches async
                 Main._server.checkWaitingClients();
                 Main._server.processAllCommands(Main.commandHandler);
-                Thread.sleep(sleepTime);
+                Thread.sleep(sleepTime); //to stop it redrawing so much
             }
             catch (ArgumentNotFoundException e) {
                 Messager.message(e.getMessage());
@@ -87,13 +87,13 @@ public final class Main
         {
             @Override
             public void run() {
-                Messager.message("Shutting down..");
+                Messager.immediateMessage("Shutting down..");
 
                 /* Update config to save changes to files */
                 try {
-                    Messager.message("Saving config");
+                    Messager.immediateMessage("Saving config");
                     Main.config.save();
-                    Messager.message("Saved config");
+                    Messager.immediateMessage("Saved config");
                 }
                 catch (Exception e) {
                     Messager.error("Failed to save config ", e);
@@ -101,7 +101,7 @@ public final class Main
 
                 /* Stop command handler */
                 try {
-                    Main.commandHandler.clearListeners();
+                    Main.commandHandler.clearReaders();
                 }
                 catch (Exception e) {
                     Messager.error("Failed to close listeners: ", e);
@@ -124,22 +124,23 @@ public final class Main
 
                 /* Save the current state of the downloader */
                 try {
-                    Messager.message("Saving torrent downloader state");
+                    Messager.immediateMessage("Saving torrent downloader state");
 
                     byte[] stateBytes = Main.torrentSession.saveState();
                     Files.write(Main._getSaveStatePath(), stateBytes);
 
-                    Messager.message("Torrent downloader state saved");
+                    Messager.immediateMessage("Torrent downloader state saved");
                 }
                 catch (IOException e) {
                     Messager.error("Failed to save torrent downloader state", e);
                 }
 
                 /* Stop the downloader */
-                Messager.message("Shutting down torrent downloader");
+                Messager.immediateMessage("Shutting down torrent downloader");
                 Main.torrentSession.stopDHT();
                 Main.torrentSession.pause();
-                Messager.message("Torrent downloader shutdown");
+                Messager.immediateMessage("Torrent downloader shutdown");
+                Messager.stopRedrawing();
             }
         });
     }
@@ -153,19 +154,19 @@ public final class Main
         Main.torrentSession.addListener(new TorrentSyncManager());
 
         /* Start the DHT server for fetching magnetdata from hash */
-        Messager.message("DHT waiting for nodes");
+        Messager.immediateMessage("DHT waiting for nodes");
         Main.dhtServer.waitNodes(1);
-        Messager.message("DHT found " + Main.dhtServer.nodes() + " nodes");
+        Messager.immediateMessage("DHT found " + Main.dhtServer.nodes() + " nodes");
 
         /* Load the previous state of the downloader */
         Path statePath = Main._getSaveStatePath();
 
         if (statePath.toFile().exists()) {
-            Messager.message("Attempting to read downloader saved state.");
+            Messager.immediateMessage("Attempting to read downloader saved state.");
 
             try {
                 Main.torrentSession.loadState(Files.readAllBytes(statePath));
-                Messager.message("Successfully read downloader saved state.");
+                Messager.immediateMessage("Successfully read downloader saved state.");
             }
             catch (Exception e) {
                 Messager.error("Error reading downloader state", e);
@@ -176,6 +177,7 @@ public final class Main
     private static void _addConfigDefaults() {
         /* System */
         Main.config.addDefault("sleepTime", "1000");
+        Main.config.addDefault("redrawTime", "250");
 
         /* Server */
         Main.config.addDefault("port", "8080");
@@ -213,6 +215,7 @@ public final class Main
         Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "viewOne", CLICommands::viewOne);
         Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "download", CLICommands::download);
         Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "delete", CLICommands::delete);
+        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "unstickAll", CLICommands::unstickAll);
     }
 
     private static void _processExecCommands(String[] args) throws Exception {

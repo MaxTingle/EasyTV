@@ -24,6 +24,7 @@ public class TorrentDownload
     private TorrentHandle  _torrentHandle;
     private Torrent        _torrent;
     private ProgressAction _progressAction;
+    private int _percentDownloaded;
 
     public TorrentDownload(Torrent torrent) {
         this._torrent = torrent;
@@ -121,6 +122,7 @@ public class TorrentDownload
             @Override
             public void torrentFinished(TorrentFinishedAlert alert) {
                 self._updateState(TorrentState.DOWNLOADED);
+                self._progressAction = null;
 
                 if (Main.config.getValue("seedAfterDownload").equals("false")) {
                     self._torrentHandle.pause();
@@ -129,7 +131,7 @@ public class TorrentDownload
 
             @Override
             public void blockFinished(BlockFinishedAlert alert) {
-                self._updateState((int) (self._torrentHandle.getStatus().getProgress() * 100));
+                self._updateState(Math.round(self._torrentHandle.getStatus().getProgress() * 100));
             }
         });
 
@@ -151,11 +153,6 @@ public class TorrentDownload
     }
 
     public boolean isDownloaded() throws Exception {
-        /* If the handle has been setup, use its status */
-        if (this.getHandle() != null) {
-            return this.getHandle().getStatus().isFinished();
-        }
-
         /* Use the savedir and the files to expect */
         if (!(new File(this.getDownloadDir())).exists()) {
             return false;
@@ -200,7 +197,7 @@ public class TorrentDownload
         if (this._torrentInfo == null && this.getTorrentInfo() == null) {
             return false;
         }
-        else if (this._torrentHandle != null && (this._torrentHandle.getStatus().isSeeding() || (!this._torrentHandle.getStatus().isFinished() && !this._torrentHandle.getStatus().isPaused()))) {
+        else if (this._torrentHandle != null && (this._torrentHandle.getStatus().isSeeding() || !this._torrentHandle.getStatus().isFinished()) && !this._torrentHandle.getStatus().isPaused()) {
             return false;
         }
 
@@ -219,6 +216,7 @@ public class TorrentDownload
             }
         }
 
+        this._torrent.loadState(); //so it loads back into downloaded_meta or something
         return true;
     }
 
@@ -284,12 +282,16 @@ public class TorrentDownload
                "\nTrackers: " + this._torrentInfo.getTrackers().size() +
                " peers: " + this._torrentHandle.getStatus().getNumPeers() +
                " seeds: " + this._torrentHandle.getStatus().getNumSeeds() +
-               "\nDownloaded: " + (int) Helpers.byteToMB(this._torrentHandle.getStatus().getTotalDownload()) + "MB" +
-               " Downloading at: " + (int) Helpers.byteToMB(this._torrentHandle.getStatus().getDownloadRate()) + "MB/s" +
-               " limited to " + (int) Helpers.byteToMB(this._torrentHandle.getDownloadLimit()) +
-               "\nUploaded: " + (int) Helpers.byteToMB(this._torrentHandle.getStatus().getTotalUpload()) + "MB" +
-               " Uploading at: " + (int) Helpers.byteToMB(this._torrentHandle.getStatus().getUploadRate()) + "MB/s" +
-               " limited to " + (int) Helpers.byteToMB(this._torrentHandle.getUploadLimit());
+               "\nDownloaded: " + Helpers.byteToMB(this._torrentHandle.getStatus().getTotalDownload()) + "MB" +
+               " Downloading at: " + Helpers.byteToMB(this._torrentHandle.getStatus().getDownloadRate()) + "MB/s" +
+               " limited to " + Helpers.byteToMB(this._torrentHandle.getDownloadLimit()) +
+               "\nUploaded: " + Helpers.byteToMB(this._torrentHandle.getStatus().getTotalUpload()) + "MB" +
+               " Uploading at: " + Helpers.byteToMB(this._torrentHandle.getStatus().getUploadRate()) + "MB/s" +
+               " limited to " + Helpers.byteToMB(this._torrentHandle.getUploadLimit());
+    }
+
+    public int getPercentDownloaded() {
+        return this._percentDownloaded;
     }
 
     private void _updateState(TorrentState state) {
@@ -302,6 +304,7 @@ public class TorrentDownload
 
     private void _updateState(int percentCompleted) {
         if (this._progressAction != null) {
+            this._percentDownloaded = percentCompleted;
             this._progressAction.onProgress(percentCompleted);
         }
     }

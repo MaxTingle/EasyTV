@@ -23,6 +23,10 @@ public class Client extends Thread
         this._reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
 
+    public boolean hasMessaged() throws IOException {
+        return this._socket.getInputStream().available() > 0;
+    }
+
     public String getLatestMessage() throws IOException {
         return this._reader.readLine();
     }
@@ -36,7 +40,10 @@ public class Client extends Thread
     }
 
     public boolean checkMagic() throws IOException {
-        if (this._magic == null) {
+        if (!this.hasMessaged() && this._magic == null) {
+            return false;
+        }
+        else if (this._magic == null) {
             this._magic = this._reader.readLine();
         }
 

@@ -10,10 +10,10 @@ SERVER:
         - Server sending updates to all clients when a torrent session update is pushed
         - Add command to set priorities
         - Add command to cancel download
-        - Persistent messaging so rather than a download % putting a new line, it replaces the existing.
 
     FIXES:
         - Code formatting
+        - Messager redraw ugly in an IDE embedded terminal
         - matchPercent matching being unreliable (EG: search test and it comes up with non-sense)
 
     TESTS:

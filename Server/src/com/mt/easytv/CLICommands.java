@@ -1,14 +1,12 @@
 package com.mt.easytv;
 
-import com.frostwire.jlibtorrent.TorrentInfo;
 import com.mt.easytv.commands.CommandArgument;
 import com.mt.easytv.interaction.Messager;
+import com.mt.easytv.interaction.PersistentMessage;
 import com.mt.easytv.torrents.Torrent;
-import com.mt.easytv.torrents.TorrentDownload;
 import com.mt.easytv.torrents.TorrentState;
 import com.mt.easytv.torrents.sources.TorrentSourceNotFound;
 
-import java.io.File;
 import java.io.IOException;
 
 public class CLICommands
@@ -204,15 +202,59 @@ public class CLICommands
 
     /**
      * Outputs a single torrent's detail
-     * -id    **The ID of the torrent to view
+     * -id     **The ID of the torrent to view
+     * -sticky **Whether or not to stick the torrent view
+     * -unsticky **Whether or not to unstick the torrent view
      */
     public static void viewOne(CommandArgument[] args) {
+        boolean makeUnsticky = false;
+        boolean makeSticky = false;
+
+        for (CommandArgument arg : args) {
+            if ("sticky".equals(arg.argument)) {
+                makeSticky = true;
+            }
+            else if ("unsticky".equals(arg.argument)) {
+                makeUnsticky = true;
+            }
+        }
+
+        if (makeSticky && makeUnsticky) {
+            Messager.message("Cannot unstick and stick torrent at the same time!");
+            return;
+        }
+
         Torrent torrent = CLICommands._torrentFromArgs(args, true);
 
         if (torrent == null) {
-            Messager.message("Torrent not found.");
+            return;
+        }
+
+        if (makeSticky) {
+            PersistentMessage persistentMessage = Messager.getPersistentMessage(torrent);
+
+            if (persistentMessage != null) {
+                Messager.message("Cannot stick torrent, torrent is already stickied.");
+                return;
+            }
+
+            Messager.addPersistentMessage((String previous) -> torrent.toString(), torrent);
+        }
+        else if (makeUnsticky) {
+            PersistentMessage persistentMessage = Messager.getPersistentMessage(torrent);
+
+            if (persistentMessage == null) {
+                Messager.message("Cannot unstick torrent, torrent not stickied.");
+                return;
+            }
+
+            if (!Messager.removePersistentMessage(persistentMessage)) {
+                Messager.message("Failed to remove persistent message.");
+            }
         }
         else {
+
+
             Messager.message(torrent.toString());
         }
     }
@@ -225,9 +267,10 @@ public class CLICommands
         Torrent torrent = CLICommands._torrentFromArgs(args, true);
 
         if (torrent == null) {
-            Messager.message("Torrent not found.");
+            return;
         }
-        else if (torrent.getDownload().deleteFiles()) {
+
+        if (torrent.getDownload().deleteFiles()) {
             Messager.message("Torrent files deleted.");
         }
         else {
@@ -245,7 +288,7 @@ public class CLICommands
         boolean force = false;
 
         for (CommandArgument arg : args) {
-            if (arg.argument != null && arg.argument.equals("force")) {
+            if ("force".equals(arg.argument)) {
                 force = true;
                 break;
             }
@@ -267,31 +310,28 @@ public class CLICommands
             return;
         }
 
-        if (torrent.getState() == TorrentState.DOWNLOADED) {
-            TorrentDownload download = torrent.getDownload();
-            TorrentInfo torrentInfo = download.getTorrentInfo();
-
-            if (torrentInfo == null) {
-                Messager.message("Torrent info not found.");
-                return;
-            }
-
-            int totalFiles = torrentInfo.getFiles().geNumFiles();
-
-            for (int i = 0; i < totalFiles; i++) {
-                File file = new File(torrentInfo.getFiles().getFilePath(i));
-
-                if (!file.delete()) {
-                    Messager.message("Failed to delete existing file " + file.getName());
-                    return;
-                }
-            }
+        if (torrent.getState() == TorrentState.DOWNLOADED) { //&& force
+            torrent.getDownload().deleteFiles();
         }
 
-        torrent.getDownload().download((int percentCompleted) -> {
-            String percentStr = torrent.getState() == TorrentState.DOWNLOADING ? percentCompleted + "%" : "";
-            Messager.message("Downloading: " + torrent.name + " download at " + torrent.getState() + " " + percentStr);
+        PersistentMessage message = Messager.addPersistentMessage((String previousMessage) ->
+                                                                          "Downloading " + torrent.id + ": " + torrent.name + " download at " + torrent.getState() + " " +
+                                                                          (torrent.getState() == TorrentState.DOWNLOADING ? torrent.getDownload().getPercentDownloaded() + "%" : "")
+        );
+
+        torrent.getDownload().download((int percent) -> {
+            if (torrent.getState() == TorrentState.DOWNLOADED) {
+                Messager.message("Downloading " + torrent.id + ": " + torrent.name + " completed");
+                Messager.removePersistentMessage(message);
+            }
         });
+    }
+
+    /**
+     * Unsticks all stuck messages
+     */
+    public static void unstickAll(CommandArgument[] args) {
+        Messager.removeAllPersistentMessages();
     }
 
     private static Torrent _torrentFromArgs(CommandArgument[] args, boolean allowEmpty) {
@@ -301,10 +341,12 @@ public class CLICommands
             if (arg.argument == null) {
                 if (allowEmpty) { //sub if so else if doesn't need not null check
                     id = arg.value; //so can just do {command} adfsdfsdf
+                    break;
                 }
             }
             else if (arg.argument.equals("id")) {
                 id = arg.value;
+                break;
             }
         }
 

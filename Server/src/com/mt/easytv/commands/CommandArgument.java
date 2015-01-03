@@ -24,7 +24,7 @@ public final class CommandArgument implements Cloneable
         /* For each of the command split via space */
         for (String arg : args) {
             if (!previousWasString && arg.startsWith("-")) { //is argument
-                if (currentCommand.argument != null) { //not new command
+                if (currentCommand.argument != null || currentCommand.value != null) { //is a new command
                     commandArguments.add((CommandArgument) currentCommand.clone());
                     currentCommand = new CommandArgument();
                     previousWasString = false;

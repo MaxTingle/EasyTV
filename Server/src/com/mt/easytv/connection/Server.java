@@ -32,6 +32,10 @@ public class Server
 
     public void processAllCommands(CommandHandler handler) throws CommandNotFoundException, ArgumentNotFoundException, IOException {
         for (Client client : this.getActiveClients()) {
+            if (!client.hasMessaged()) {
+                continue;
+            }
+
             Message message = new Message(false);
             Messager.attachMessage(message);
 
@@ -57,7 +61,7 @@ public class Server
 
     public void startListening() throws IOException {
         /* Setting up the listener */
-        if (this._listenerThread != null && this._listenerThread.isAlive()) {
+        if (this._listenerThread != null && this._listenerThread.isAlive() && !this._listenerThread.isInterrupted()) {
             Messager.message("Warning, startListening called when listener thread is still alive");
             this.stopListening();
         }
@@ -80,7 +84,7 @@ public class Server
                                                           Messager.error("Stopped listening while awaiting client ", e);
                                                       }
                                                   }
-            }
+                                              }
 
                                               Messager.message("Listener server stopped");
                                           });

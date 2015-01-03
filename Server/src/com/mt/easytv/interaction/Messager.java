@@ -96,7 +96,8 @@ public final class Messager
     }
 
     public static void removeAllPersistentMessages() {
-        Messager._persistentMessages.forEach(Messager::removePersistentMessage);
+        Messager._persistentMessages.forEach((PersistentMessage message) -> Messager.addBufferLine(message._previousMessage));
+        Messager._persistentMessages.clear();
     }
 
     public static void redrawBuffer() {

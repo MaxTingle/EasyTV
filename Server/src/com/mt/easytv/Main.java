@@ -7,7 +7,7 @@ import com.mt.easytv.commands.ArgumentNotFoundException;
 import com.mt.easytv.commands.CommandHandler;
 import com.mt.easytv.commands.CommandNotFoundException;
 import com.mt.easytv.config.Config;
-import com.mt.easytv.connection.Server;
+import com.mt.easytv.connectivity.Server;
 import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.torrents.Torrent;
 import com.mt.easytv.torrents.TorrentManager;
@@ -206,16 +206,16 @@ public final class Main
     }
 
     private static void _addCommands() {
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "quit", CLICommands::quit);
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "getConfig", CLICommands::getConfig);
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "setConfig", CLICommands::setConfig);
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "search", CLICommands::search, false);
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "sort", CLICommands::sort, false);
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "view", CLICommands::view);
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "viewOne", CLICommands::viewOne);
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "download", CLICommands::download);
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "delete", CLICommands::delete);
-        Main.commandHandler.addCommand(CommandHandler.CommandSource.CLI, "unstickAll", CLICommands::unstickAll);
+        Main.commandHandler.addCommand("quit", CLICommands::quit);
+        Main.commandHandler.addCommand("getConfig", CLICommands::getConfig);
+        Main.commandHandler.addCommand("setConfig", CLICommands::setConfig);
+        Main.commandHandler.addCommand("search", CLICommands::search, false);
+        Main.commandHandler.addCommand("sort", CLICommands::sort, false);
+        Main.commandHandler.addCommand("view", CLICommands::view);
+        Main.commandHandler.addCommand("viewOne", CLICommands::viewOne);
+        Main.commandHandler.addCommand("download", CLICommands::download);
+        Main.commandHandler.addCommand("delete", CLICommands::delete);
+        Main.commandHandler.addCommand("unstickAll", CLICommands::unstickAll);
     }
 
     private static void _processExecCommands(String[] args) throws Exception {

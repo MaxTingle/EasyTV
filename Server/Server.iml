@@ -22,7 +22,7 @@
         <CLASSES />
         <JAVADOC />
         <NATIVE>
-          <root url="file://$MODULE_DIR$/libs/ext" />
+          <root url="file://$MODULE_DIR$/lib/ext" />
         </NATIVE>
         <SOURCES />
       </library>

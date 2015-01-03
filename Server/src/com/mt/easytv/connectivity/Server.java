@@ -1,4 +1,4 @@
-package com.mt.easytv.connection;
+package com.mt.easytv.connectivity;
 
 import com.mt.easytv.Main;
 import com.mt.easytv.commands.ArgumentNotFoundException;

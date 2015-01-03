@@ -1,49 +1,163 @@
 package com.mt.easytv.commands;
 
-import com.mt.easytv.connection.Client;
+import com.mt.easytv.connectivity.Client;
+import com.sun.istack.internal.NotNull;
+import com.sun.istack.internal.Nullable;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public final class CommandHandler extends Thread
+/**
+ * The facade that handles all aspects of management
+ * (Creating, processing, reading)
+ * all types of commands. (Server client and CLI)
+ */
+public final class CommandHandler
 {
     private ArrayList<Command>        _commands = new ArrayList<>();
     private ArrayList<BufferedReader> _readers  = new ArrayList<>();
 
-    public void addCommand(Command command) {
+    public enum CommandSource
+    {
+        ANY,
+        CLIENT,
+        CLI
+    }
+
+    /**
+     * Adds the command to the list of registered and
+     * processable commands.
+     *
+     * @param command The command to register and listen for
+     */
+    public void addCommand(@NotNull Command command) {
         this._commands.add(command);
     }
 
-    public void addCommand(CommandSource source, String commandName, ICommand action) {
-        this.addCommand(source, commandName, action, true);
+    /**
+     * Creates a command from the details given and adds it
+     * to the list of processable commands. Will execute
+     * the action method inside the command's implementation
+     * of said method.
+     * Command can only be executed by CLI sources as it will
+     * only implement void processCommand
+     * Command will allow null arguments
+     *
+     * @param commandName The name of the command that is checked
+     *                    against when processCommand is called
+     * @param action      The implementation of ICommand that has
+     *                    the processCommand method to execute
+     * @return The created command
+     */
+    public Command addCommand(@NotNull String commandName, @NotNull ICommand action) {
+        return this.addCommand(CommandSource.CLI, commandName, action, null, true);
     }
 
-    public void addCommand(CommandSource source, String commandName, ICommand action, boolean allowNullArgument) {
+    /**
+     * Creates a command from the details given and adds it
+     * to the list of processable commands. Will execute
+     * the action method inside the command's implementation
+     * of said method.
+     * Command can only be executed by CLI sources as it will
+     * only implement void processCommand
+     *
+     * @param commandName       The name of the command that is checked
+     *                          against when processCommand is called
+     * @param action            The implementation of ICommand that has
+     *                          the processCommand method to execute
+     * @param allowNullArgument Whether or not to allow any
+     *                          CommandArgument.arguments in the
+     *                          args array processCommand call is
+     *                          it with to be null
+     * @return The created command
+     */
+    public Command addCommand(@NotNull String commandName, @NotNull ICommand action, boolean allowNullArgument) {
+        return this.addCommand(CommandSource.CLI, commandName, action, null, allowNullArgument);
+    }
+
+    /**
+     * Creates a command from the details given and adds it
+     * to the list of processable commands. Will execute
+     * the action method inside the command's implementation
+     * of said method.
+     * Command can only be executed by Client sources as it will
+     * only implement Object processCommand
+     * Command will allow null arguments
+     *
+     * @param commandName The name of the command that is checked
+     *                    against when processCommand is called
+     * @param action      The implementation of IClientCommand that has
+     *                    the processCommand method to execute
+     * @return The created command
+     */
+    public Command addCommand(@NotNull String commandName, @NotNull IClientCommand action) {
+        return this.addCommand(CommandSource.CLIENT, commandName, null, action, true);
+    }
+
+    /**
+     * Creates a command from the details given and adds it
+     * to the list of processable commands. Will execute
+     * the action method inside the command's implementation
+     * of said method.
+     * Command can only be executed by Client sources as it will
+     * only implement Object processCommand
+     *
+     * @param commandName       The name of the command that is checked
+     *                          against when processCommand is called
+     * @param action            The implementation of IClientCommand that has
+     *                          the processCommand method to execute
+     * @param allowNullArgument Whether or not to allow any
+     *                          CommandArgument.arguments in the
+     *                          args array processCommand call is
+     *                          it with to be null
+     * @return The created command
+     */
+    public Command addCommand(@NotNull String commandName, @NotNull IClientCommand action, boolean allowNullArgument) {
+        return this.addCommand(CommandSource.CLIENT, commandName, null, action, allowNullArgument);
+    }
+
+    /**
+     * Creates a command from the details given and
+     * adds it to the list of processable commands
+     *
+     * @param source            Which sources the command can be ran on
+     *                          (All sources allowed should have their
+     *                          associated interfaces not null)
+     * @param commandName       The name of the command that is checked
+     *                          against when processCommand is called
+     * @param cliAction         The implementation of ICommand that has
+     *                          the processCommand method to execute whenever
+     *                          a CLI sourced command comes in
+     * @param clientAction      The implementation of IClientCommand that has
+     *                          the processCommand method to execute whenever
+     *                          a CLI sourced command comes in
+     * @param allowNullArgument Whether or not to allow any
+     *                          CommandArgument.arguments in the
+     *                          args array processCommand call is
+     *                          it with to be null
+     * @return The created command
+     */
+    public Command addCommand(CommandSource source, @NotNull String commandName, @Nullable ICommand cliAction, @Nullable IClientCommand clientAction, boolean allowNullArgument) {
         Command command = new Command()
         {
             @Override
             public void processCommand(CommandArgument[] args) throws Exception {
-                action.processCommand(args);
+                if (cliAction == null) {
+                    throw new NotImplementedException();
+                }
+
+                cliAction.processCommand(args);
             }
-        };
-        command.source = source;
-        command.command = commandName;
-        command.allowNullArgument = allowNullArgument;
 
-        this.addCommand(command);
-    }
-
-    public void addCommand(CommandSource source, String commandName, IClientCommand action) {
-        this.addCommand(source, commandName, action, true);
-    }
-
-    public void addCommand(CommandSource source, String commandName, IClientCommand action, boolean allowNullArgument) {
-        Command command = new Command()
-        {
             @Override
             public Object processCommand(CommandArgument[] args, Client client) throws Exception {
-                return action.processCommand(args, client);
+                if (clientAction == null) {
+                    throw new NotImplementedException();
+                }
+
+                return clientAction.processCommand(args, client);
             }
         };
         command.source = source;
@@ -51,9 +165,18 @@ public final class CommandHandler extends Thread
         command.allowNullArgument = allowNullArgument;
 
         this.addCommand(command);
+        return command;
     }
 
-    public boolean removeCommand(String commandName) {
+    /**
+     * Removes the first command that has the
+     * command value equal to the commandName
+     *
+     * @param commandName The command to search for
+     * @return Whether or not the command was found
+     *         and removed
+    */
+    public boolean removeCommand(@NotNull String commandName) {
         for (Command command : this._commands) {
             if (commandName.equals(command.command)) {
                 this.removeCommand(command);
@@ -64,76 +187,99 @@ public final class CommandHandler extends Thread
         return false;
     }
 
-    public boolean removeCommand(Command command) {
-        if (!this._commands.contains(command)) {
-            return false;
-        }
-
-        this._commands.remove(command);
-        return true;
+    /**
+     * Removes the command from the list of
+     * processable commands, meaning it can
+     * no longer be used
+     *
+     * @param command The command to remove
+     * @return Whether or not the command removed
+     */
+    public boolean removeCommand(@NotNull Command command) {
+        return this._commands.remove(command);
     }
 
+    /**
+     * Gets the command and command arguments
+     * from a string and attempts to find
+     * and execute said command.
+     * Only executes CLI or ANY based commands.
+     *
+     * @param commandFull The command and arguments
+     *                    EG: quit -force yes
+     * @throws java.lang.Exception Exception thrown by the command
+     * @throws com.mt.easytv.commands.CommandNotFoundException Failed to find the command to execute
+     * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
+    */
     public void processCommand(String commandFull) throws Exception {
         this._processCommand(commandFull, null, false);
     }
 
+    /**
+     * Gets the command and command arguments
+     * from a string and attempts to find
+     * and execute said command
+     * Only executes CLIENT or ANY based commands.
+     *
+     * @param commandFull The command and arguments EG: quit -force yes
+     * @param client      The client that wants to execute the given command
+     * @throws java.lang.Exception Exception thrown by the command
+     * @throws com.mt.easytv.commands.CommandNotFoundException Failed to find the command to execute
+     * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
+    */
     public Object processCommand(String commandFull, Client client) throws Exception {
         return this._processCommand(commandFull, client, true);
     }
 
-    private Object _processCommand(String commandFull, Client client, boolean isClientCommand) throws Exception {
-        /* Building up argument array */
-        String[] commandParts = commandFull.split(" ");
-
-        if (commandParts.length < 1) {
-            throw new CommandNotFoundException(commandFull);
-        }
-
-        String[] argumentParts = new String[commandParts.length - 1];
-        System.arraycopy(commandParts, 1, argumentParts, 0, commandParts.length - 1);
-        CommandArgument[] args = CommandArgument.fromArray(argumentParts);
-
-        for (Command command : this._commands) {
-            if (command.command.equals(commandParts[0]) &&
-                (
-                        (command.source == CommandSource.CLIENT && isClientCommand) ||
-                        (command.source == CommandSource.CLI && !isClientCommand)
-                )) {
-
-                this._processCommandArguments(command, args);
-
-                if(isClientCommand) {
-                    return command.processCommand(args, client);
-                }
-                else {
-                    command.processCommand(args);
-                    return null;
-                }
-            }
-        }
-
-        throw new CommandNotFoundException(commandParts[0]);
-    }
-
-    public void addReader(BufferedReader reader) {
+    /**
+     * Adds a BufferedReader to the list of
+     * sources for commands.
+     *
+     * @param reader The reader to add to the list
+     */
+    public void addReader(@NotNull BufferedReader reader) {
         this._readers.add(reader);
     }
 
+    /**
+     * Removes a BufferedReader from the list of
+     * sources for commands.
+     *
+     * @param reader The reader to remove from the list
+     * @return Whether or not the reader was found and removed
+     */
     public boolean removeReader(BufferedReader reader) {
-        if (!this._readers.contains(reader)) {
-            return false;
-        }
-
-        this._readers.remove(reader);
-        return true;
+        return this._readers.remove(reader);
     }
 
+    /**
+     * Reads from all the BufferedReaders in
+     * the list of sources for commands. Then
+     * processes any commands that have come
+     * through from the BufferedReaders.
+     * Not blocking
+     *
+     * @throws java.lang.Exception Exception thrown by the command
+     * @throws com.mt.easytv.commands.CommandNotFoundException Failed to find the command to execute
+     * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
+    */
     public void read() throws Exception {
         for (BufferedReader reader : this._readers) {
             this.readFrom(reader);
         }
     }
 
+    /**
+     * Reads a single line from a single
+     * buffered reader. Then attempts to
+     * process it as a command.
+     * Not blocking
+     *
+     * @param reader The BufferedReader to read the command line from
+     * @throws java.lang.Exception Exception thrown by the command
+     * @throws com.mt.easytv.commands.CommandNotFoundException Failed to find the command to execute
+     * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
+     */
     public void readFrom(BufferedReader reader) throws Exception {
         if(reader.ready()) {
             String line = reader.readLine();
@@ -144,6 +290,12 @@ public final class CommandHandler extends Thread
         }
     }
 
+    /**
+     * Closes all readers then removes them
+     * all from the list of command sources
+     *
+     * @throws java.io.IOException Failed closing a reader
+    */
     public void clearReaders() throws IOException {
         for (BufferedReader reader : this._readers) {
             reader.close();
@@ -162,9 +314,38 @@ public final class CommandHandler extends Thread
         }
     }
 
-    public enum CommandSource
-    {
-        CLIENT,
-        CLI
+    private Object _processCommand(String commandFull, Client client, boolean isClientCommand) throws Exception {
+        /* Building up argument array */
+        String[] commandParts = commandFull.split(" ");
+
+        if (commandParts.length < 1) {
+            throw new CommandNotFoundException(commandFull);
+        }
+
+        String[] argumentParts = new String[commandParts.length - 1];
+        System.arraycopy(commandParts, 1, argumentParts, 0, commandParts.length - 1);
+        CommandArgument[] args = CommandArgument.fromArray(argumentParts);
+
+        for (Command command : this._commands) {
+            if (command.command.equals(commandParts[0]) &&
+                (
+                        (command.source == CommandSource.CLIENT && isClientCommand) ||
+                        (command.source == CommandSource.CLI && !isClientCommand) ||
+                        command.source == CommandSource.ANY
+                )) {
+
+                this._processCommandArguments(command, args);
+
+                if (isClientCommand) {
+                    return command.processCommand(args, client);
+                }
+                else {
+                    command.processCommand(args);
+                    return null;
+                }
+            }
+        }
+
+        throw new CommandNotFoundException(commandParts[0]);
     }
 }

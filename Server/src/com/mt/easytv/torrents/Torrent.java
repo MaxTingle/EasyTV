@@ -41,7 +41,7 @@ public class Torrent
     }
 
     public String getUniqueName() {
-        return this.url.replaceAll("[^0-9a-zA-Z-.,;_() ]", "");
+        return this.url == null ? null : this.url.replaceAll("[^0-9a-zA-Z-.,;_() ]", "");
     }
 
     public String toString() {

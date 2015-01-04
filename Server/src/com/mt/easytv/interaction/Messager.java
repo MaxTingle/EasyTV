@@ -108,7 +108,7 @@ public final class Messager
         String persistentMessageBuffer = "";
 
         for (PersistentMessage message : Messager._persistentMessages) {
-            message._previousMessage = message.updateMessage(message._previousMessage);
+            message.updateMessage();
             persistentMessageBuffer += message._previousMessage + "\n";
         }
 

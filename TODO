@@ -1,11 +1,10 @@
 SERVER:
     OPTIMIZATIONS:
-        - piratebaylocal searching (Via Helpers.matchPercent optimizations)
 
     IMPLEMENTATIONS:
         - kickasstorrents searching
         - piratebay searching
-        - TorrentManager loading torrents from the state. Could implement own state saving or hook into session listeners and create torrent from the handle.
+        - TorrentManager loading torrents from a previous shutdown, not sure if Session state does this, look into it using the sync manager on bootup
         - Torrent file viewing
         - Server sending updates to all clients when a torrent session update is pushed
         - Add command to set priorities
@@ -14,15 +13,14 @@ SERVER:
     FIXES:
         - Code formatting
         - Messager redraw ugly in an IDE embedded terminal
-        - matchPercent matching being unreliable (EG: search test and it comes up with non-sense)
 
     TESTS:
         - Using finished thing directly from jar
 
 CLIENT:
-    ALL OF IT AGHRHRRHRH
+    - Interaction with server (detection, connection, auth, commands)
+    - GUI and settings GUI
+    - Everything else
 
-
-
-SEARCH COMMAND
-search -search test -searchIn piratebaylocal -sortBy seeders -view
+NOTEPAD:
+search -search "batman the dark knight" -searchIn piratebaylocal -sortBy seeders -view -progress

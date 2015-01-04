@@ -1,9 +1,9 @@
 package com.mt.easytv.torrents.sources;
 
+import com.mt.easytv.Helpers;
 import com.mt.easytv.Main;
 import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.interaction.Progress;
-import com.mt.easytv.torrents.Helpers;
 import com.mt.easytv.torrents.Torrent;
 
 import java.io.BufferedReader;
@@ -14,6 +14,17 @@ import java.util.ArrayList;
 
 public final class PirateBayLocal implements TorrentSource
 {
+    private final class Structure
+    { //int representing the array index of each column
+        public static final int EXPECTED_ITEMS = 6;
+        public int id;
+        public int name;
+        public int size;
+        public int seeders;
+        public int leechers;
+        public int magnet;
+    }
+
     @Override
     public Torrent view(String url) throws Exception {
         return null;
@@ -21,9 +32,11 @@ public final class PirateBayLocal implements TorrentSource
 
     @Override
     public ArrayList<Torrent> search(String searchTerms, boolean showProgress) throws Exception {
+        searchTerms = Helpers.cleanTorrentName(searchTerms).toLowerCase();
+
         /* Load file */
         String torrentsPath = Main.config.getValue("tpbIndex");
-        Progress progressTracker = new Progress(this._getTotalLines(new FileReader(torrentsPath)));
+        Progress progressTracker = new Progress(this._getTotalLines(new FileReader(torrentsPath)), "Piratebay local search:");
         BufferedReader reader = new BufferedReader(new FileReader(torrentsPath));
 
         /* Parts structure */
@@ -37,6 +50,10 @@ public final class PirateBayLocal implements TorrentSource
         /* Tracking */
         int lineIndex = 0;
         int skipped = 0;
+
+        if (showProgress) {
+            progressTracker.show();
+        }
 
         while ((line = reader.readLine()) != null) {
             String[] lineParts = line.split("\\|");
@@ -77,8 +94,9 @@ public final class PirateBayLocal implements TorrentSource
             }
 
             /* Processing into a torrent */
-            double matchLevel = Helpers.matchPercent(searchTerms, lineParts[structure.name]);
-            if (matchLevel * 100 >= matchThreshold) {
+            String name = Helpers.cleanTorrentName(lineParts[structure.name]).toLowerCase();
+
+            if (Math.round(Helpers.similarity(searchTerms, name) * 100) >= matchThreshold) {
                 Torrent torrent = new Torrent();
                 torrent.name = lineParts[structure.name];
                 torrent.seeders = Integer.parseInt(lineParts[structure.seeders]);
@@ -89,16 +107,14 @@ public final class PirateBayLocal implements TorrentSource
             }
 
             progressTracker.increment();
-
-            if (showProgress) {
-                progressTracker.display();
-            }
             lineIndex++;
         }
+
         reader.close();
+        progressTracker.hide();
 
         if (skipped > 0) {
-            Messager.message("Skipped " + skipped + " during search");
+            Messager.message("Piratebay local search: Skipped " + skipped + " during search");
         }
 
         return matches;
@@ -155,16 +171,5 @@ public final class PirateBayLocal implements TorrentSource
         }
 
         return structure;
-    }
-
-    private final class Structure
-    { //int representing the array index of each column
-        public static final int EXPECTED_ITEMS = 6;
-        public int id;
-        public int name;
-        public int size;
-        public int seeders;
-        public int leechers;
-        public int magnet;
     }
 }

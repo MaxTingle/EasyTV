@@ -1,6 +1,7 @@
 package com.mt.easytv.commands;
 
 import com.mt.easytv.connectivity.Client;
+import com.mt.easytv.interaction.Messager;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -333,6 +334,9 @@ public final class CommandHandler
                         (command.source == CommandSource.CLI && !isClientCommand) ||
                         command.source == CommandSource.ANY
                 )) {
+                if (!isClientCommand) {
+                    Messager.addBufferLine(commandFull);
+                }
 
                 this._processCommandArguments(command, args);
 

@@ -5,6 +5,7 @@ public final class Progress
     private double _total;
     private double _processed = 0;
     private String _prefix    = "";
+    private PersistentMessage _persistentMessage;
 
     public Progress(double total) {
         this._total = total;
@@ -31,7 +32,25 @@ public final class Progress
         return (this._processed / this._total) * 100;
     }
 
-    public void display() {
-        Messager.message(this._prefix + " " + this.getProcessed() + " (" + String.format("%.2f", this.getPercent()) + "%)");
+    public boolean show() {
+        if (this._persistentMessage != null || Messager.getPersistentMessage(this) != null) {
+            return false;
+        }
+
+        Progress self = this;
+        this._persistentMessage = Messager.addPersistentMessage((String previous) -> self._prefix + " " + self.getProcessed() +
+                                                                                     " (" + String.format("%.2f", self.getPercent()) + "%)",
+                                                                this);
+
+        return true;
+    }
+
+    public boolean hide() {
+        if (this._persistentMessage == null) {
+            return false;
+        }
+
+        this._persistentMessage.updateMessage();
+        return Messager.removePersistentMessage(this._persistentMessage);
     }
 }

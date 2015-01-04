@@ -6,6 +6,7 @@ import com.frostwire.jlibtorrent.TorrentInfo;
 import com.frostwire.jlibtorrent.Utils;
 import com.frostwire.jlibtorrent.alerts.BlockFinishedAlert;
 import com.frostwire.jlibtorrent.alerts.TorrentFinishedAlert;
+import com.mt.easytv.Helpers;
 import com.mt.easytv.Main;
 
 import java.io.File;

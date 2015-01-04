@@ -11,7 +11,7 @@
     <orderEntry type="module-library" exported="">
       <library name="jlibtorrent">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/libs/frostwire-jlibtorrent.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/frostwire-jlibtorrent.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

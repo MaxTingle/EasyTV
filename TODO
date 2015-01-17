@@ -6,15 +6,16 @@ SERVER:
         - piratebay searching
         - TorrentManager loading torrents from a previous shutdown, not sure if Session state does this, look into it using the sync manager on bootup
         - Torrent file viewing
-        - Server sending updates to all clients when a torrent session update is pushed
-        - Add command to set priorities
-        - Add command to cancel download
+        - Server sending updates to all clients when a torrent session update is pushed. Server sending updates to all clients when vlcj has event
+        - Server displaying all downloading status on jframe
+        - Add piratebaylocal search factory and multi thread the searching
 
     FIXES:
         - Code formatting
         - Messager redraw ugly in an IDE embedded terminal
 
     TESTS:
+        - Stop torrent downloading
         - Using finished thing directly from jar
 
 CLIENT:

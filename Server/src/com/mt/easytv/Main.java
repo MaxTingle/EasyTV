@@ -12,7 +12,16 @@ import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.torrents.Torrent;
 import com.mt.easytv.torrents.TorrentManager;
 import com.mt.easytv.torrents.TorrentState;
+import uk.co.caprica.vlcj.component.EmbeddedMediaListPlayerComponent;
+import uk.co.caprica.vlcj.discovery.NativeDiscovery;
+import uk.co.caprica.vlcj.player.embedded.FullScreenStrategy;
+import uk.co.caprica.vlcj.player.embedded.windows.Win32FullScreenStrategy;
+import uk.co.caprica.vlcj.player.embedded.x.XFullScreenStrategy;
+import uk.co.caprica.vlcj.runtime.RuntimeUtil;
+import uk.co.caprica.vlcj.version.LibVlcVersion;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,15 +33,24 @@ public final class Main
 {
     private static final String CONFIG_PATH = "storage";
     private static final String CONFIG_NAME = "config.properties";
+    public static Config config;
+
     public static Session    torrentSession;
     public static Downloader torrentDownloader;
-    public static DHT        dhtServer;
-    public static CommandHandler commandHandler = new CommandHandler();
+    public static DHT dhtListener;
+
     public static TorrentManager torrentManager = new TorrentManager();
-    public static Config config;
+    public static CommandHandler commandHandler = new CommandHandler();
+
+    public static JFrame                           displayFrame;
+    public static EmbeddedMediaListPlayerComponent mediaPlayer;
+    public static Torrent                          playingTorrent;
+
     private static Server _server;
 
     public static void main(String[] args) throws Exception {
+        Main._checkVlcJInstall();
+
         Main._initShutdownHook();
         Messager.init();
 
@@ -47,6 +65,11 @@ public final class Main
         Messager.immediateMessage("Loading JLibTorrent components..");
         Main._initJLibTorrent();
         Messager.immediateMessage("JLibTorrent initialization complete");
+
+        /* Setup vlc window */
+        Messager.immediateMessage("Loading VLCJ GUI..");
+        Main._initDisplay();
+        Messager.immediateMessage("VLCJ ready");
 
         /* Commands */
         Messager.message("Command handler starting..");
@@ -79,6 +102,23 @@ public final class Main
             catch (Exception e) {
                 Messager.error("Command reading error: ", e);
             }
+        }
+    }
+
+    private static void _checkVlcJInstall() throws Exception {
+        if (!RuntimeUtil.isWindows() && !RuntimeUtil.isNix()) {
+            throw new Exception("Your operating system is not supported.");
+        }
+
+        NativeDiscovery discoverer = new NativeDiscovery();
+        discoverer.discover();
+
+        // discovery()'s method return value is WRONG on Linux
+        try {
+            LibVlcVersion.getVersion();
+        }
+        catch (Exception e) {
+            throw new Exception("VLC install not found.");
         }
     }
 
@@ -148,15 +188,15 @@ public final class Main
     private static void _initJLibTorrent() {
         Main.torrentSession = new Session();
         Main.torrentDownloader = new Downloader(Main.torrentSession);
-        Main.dhtServer = new DHT(Main.torrentSession);
+        Main.dhtListener = new DHT(Main.torrentSession);
 
         /* Setup the sync manager that maintains contact between the server and clients and handles errors */
         Main.torrentSession.addListener(new TorrentSyncManager());
 
         /* Start the DHT server for fetching magnetdata from hash */
         Messager.immediateMessage("DHT waiting for nodes");
-        Main.dhtServer.waitNodes(1);
-        Messager.immediateMessage("DHT found " + Main.dhtServer.nodes() + " nodes");
+        Main.dhtListener.waitNodes(1);
+        Messager.immediateMessage("DHT found " + Main.dhtListener.nodes() + " nodes");
 
         /* Load the previous state of the downloader */
         Path statePath = Main._getSaveStatePath();
@@ -205,6 +245,23 @@ public final class Main
         Main.config.addDefault("uploadLimit", (1024 * 1024 * 1024) / 4); //250MB
     }
 
+    private static void _initDisplay() {
+        Main.displayFrame = new JFrame();
+        Main.displayFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        Main.displayFrame.setLocation(0, 0);
+        Main.displayFrame.setSize(Toolkit.getDefaultToolkit().getScreenSize());
+
+        Main.mediaPlayer = new EmbeddedMediaListPlayerComponent()
+        {
+            @Override
+            protected FullScreenStrategy onGetFullScreenStrategy() {
+                return RuntimeUtil.isWindows() ? new Win32FullScreenStrategy(Main.displayFrame) : new XFullScreenStrategy(Main.displayFrame);
+            }
+        };
+
+        Main.displayFrame.setContentPane(Main.mediaPlayer);
+    }
+
     private static void _addCommands() {
         Main.commandHandler.addCommand("quit", CLICommands::quit);
         Main.commandHandler.addCommand("getConfig", CLICommands::getConfig);
@@ -214,6 +271,8 @@ public final class Main
         Main.commandHandler.addCommand("view", CLICommands::view);
         Main.commandHandler.addCommand("viewOne", CLICommands::viewOne);
         Main.commandHandler.addCommand("download", CLICommands::download);
+        Main.commandHandler.addCommand("stopDownload", CLICommands::stopDownload);
+        Main.commandHandler.addCommand("play", CLICommands::play);
         Main.commandHandler.addCommand("delete", CLICommands::delete);
         Main.commandHandler.addCommand("unstickAll", CLICommands::unstickAll);
     }

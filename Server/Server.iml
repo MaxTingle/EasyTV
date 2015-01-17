@@ -9,6 +9,16 @@
     <orderEntry type="jdk" jdkName="1.8 (32bit)" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library" exported="">
+      <library name="ext libs">
+        <CLASSES />
+        <JAVADOC />
+        <NATIVE>
+          <root url="file://$MODULE_DIR$/lib/ext" />
+        </NATIVE>
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
       <library name="jlibtorrent">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/frostwire-jlibtorrent.jar!/" />
@@ -18,13 +28,19 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library" exported="">
-      <library name="libtorrent">
-        <CLASSES />
-        <JAVADOC />
-        <NATIVE>
-          <root url="file://$MODULE_DIR$/lib/ext" />
-        </NATIVE>
-        <SOURCES />
+      <library name="uk.co.caprica:vlcj:3.1.0" type="repository">
+        <properties maven-id="uk.co.caprica:vlcj:3.1.0" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/vlcj-3.1.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/jna-3.5.2.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/platform-3.5.2.jar!/" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="jar://$MODULE_DIR$/lib/vlcj-3.1.0-javadoc.jar!/" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/lib/vlcj-3.1.0-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
   </component>

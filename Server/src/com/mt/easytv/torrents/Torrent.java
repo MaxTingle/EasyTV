@@ -1,5 +1,6 @@
 package com.mt.easytv.torrents;
 
+import com.mt.easytv.Main;
 import com.mt.easytv.interaction.Messager;
 
 public class Torrent
@@ -34,6 +35,22 @@ public class Torrent
         }
 
         return this._download;
+    }
+
+    public void play(String file) {
+        if (Main.playingTorrent != null) {
+            Main.playingTorrent.pause();
+        }
+
+        Main.displayFrame.setVisible(true);
+        Main.mediaPlayer.getMediaPlayer().setFullScreen(true);
+        Main.mediaPlayer.getMediaPlayer().playMedia(file);
+        this._state = TorrentState.ACTIONED;
+    }
+
+    public void pause() {
+        Main.mediaPlayer.getMediaPlayer().stop();
+        this._state = TorrentState.DOWNLOADED;
     }
 
     public TorrentState getState() {

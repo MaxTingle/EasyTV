@@ -269,6 +269,10 @@ public class CLICommands
         if (torrent == null) {
             return;
         }
+        else if(torrent.getDownload().isDownloading() && !torrent.getDownload().stopDownload()) {
+            Messager.message("Torrent failed to pause.");
+            return;
+        }
 
         if (torrent.getDownload().deleteFiles()) {
             Messager.message("Torrent files deleted.");
@@ -279,7 +283,61 @@ public class CLICommands
     }
 
     /**
-     * Starts a torrent downlaod
+     * Stops a torrent downloading
+     * -id    **The ID of the torrent to delete
+     */
+    public static void stopDownload(CommandArgument[] args) throws Exception {
+        Torrent torrent = CLICommands._torrentFromArgs(args, true);
+
+        if (torrent == null) {
+            return;
+        }
+        else if(!torrent.getDownload().isDownloading()) {
+            Messager.message("Torrent not downloading.");
+            return;
+        }
+
+        if(torrent.getDownload().stopDownload()) {
+            Messager.message("Download stopped");
+        }
+        else {
+            Messager.message("Download failed to stop.");
+        }
+    }
+
+    /**
+     * Plays a torrent file using vlc
+     * -id    **The ID of the torrent to delete
+     * -file  **The file to play if there are multiple
+     */
+    public static void play(CommandArgument[] args) throws Exception {
+        Torrent torrent = CLICommands._torrentFromArgs(args, true);
+        String fileToPlay = null;
+
+        for(CommandArgument arg : args) {
+            if("file".equals(arg.argument)) {
+                fileToPlay = arg.value;
+                break;
+            }
+        }
+
+        if (torrent == null) {
+            return;
+        }
+        else if(fileToPlay == null) {
+            Messager.message("Please specify the torrent file you want to play.");
+            return;
+        }
+        else if(torrent.getState() != TorrentState.DOWNLOADED) {
+            Messager.message("Torrent not downloaded.");
+            return;
+        }
+
+        torrent.play(fileToPlay);
+    }
+
+    /**
+     * Starts a torrent download
      * -id      **The ID of the torrent to download
      * -force   **Whether or not to force redownload
      */
@@ -315,13 +373,17 @@ public class CLICommands
         }
 
         PersistentMessage message = Messager.addPersistentMessage((String previousMessage) ->
-                                                                          "Downloading " + torrent.id + ": " + torrent.name + " download at " + torrent.getState() + " " +
-                                                                          (torrent.getState() == TorrentState.DOWNLOADING ? torrent.getDownload().getPercentDownloaded() + "%" : "")
+          "Downloading " + torrent.id + ": " + torrent.name + " download at " + torrent.getState() + " " +
+          (torrent.getState() == TorrentState.DOWNLOADING ? torrent.getDownload().getPercentDownloaded() + "%" : "")
         );
 
         torrent.getDownload().download((int percent) -> {
             if (torrent.getState() == TorrentState.DOWNLOADED) {
                 Messager.message("Downloading " + torrent.id + ": " + torrent.name + " completed");
+                Messager.removePersistentMessage(message);
+            }
+            else if(percent == -1) {//download cancelled
+                Messager.message("Downloading " + torrent.id + ": " + torrent.name + " cancelled");
                 Messager.removePersistentMessage(message);
             }
         });

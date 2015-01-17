@@ -6,10 +6,7 @@ import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.interaction.Progress;
 import com.mt.easytv.torrents.Torrent;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
+import java.io.*;
 import java.util.ArrayList;
 
 public final class PirateBayLocal implements TorrentSource
@@ -36,6 +33,12 @@ public final class PirateBayLocal implements TorrentSource
 
         /* Load file */
         String torrentsPath = Main.config.getValue("tpbIndex");
+
+        if (!new File(torrentsPath).exists()) {
+            Messager.message("PirateBayLocal: Index file not found.");
+            return new ArrayList<>();
+        }
+
         Progress progressTracker = new Progress(this._getTotalLines(new FileReader(torrentsPath)), "Piratebay local search:");
         BufferedReader reader = new BufferedReader(new FileReader(torrentsPath));
 

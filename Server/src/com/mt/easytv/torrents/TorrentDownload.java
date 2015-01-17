@@ -221,6 +221,18 @@ public class TorrentDownload
         return true;
     }
 
+    public boolean stopDownload() {
+        if (this._torrentHandle == null) {
+            return false;
+        }
+
+        this._torrentHandle.pause();
+        this._torrentHandle.saveResumeData();
+        this._updateState(-1);
+
+        return true;
+    }
+
     public File[] getFiles() throws Exception {
         if (this.getTorrentInfo() == null) {
             return null;
@@ -278,6 +290,18 @@ public class TorrentDownload
             return null;
         }
 
+        String allFiles = "";
+        try {
+            File[] files = this.getFiles();
+
+            for (File file : files) {
+                allFiles += (allFiles.equals("") ? "\n " : " ") + file.getPath().replace(this.getDownloadDir(), "");
+            }
+        }
+        catch (Exception e) {
+            allFiles = "Failed to load files: " + e.getMessage();
+        }
+
         return "Created by: " + this._torrentInfo.getCreator() +
                " on " + (new Date((long) this._torrentInfo.getCreationDate() * 1000)).toString() +
                "\nTrackers: " + this._torrentInfo.getTrackers().size() +
@@ -288,7 +312,8 @@ public class TorrentDownload
                " limited to " + Helpers.byteToMB(this._torrentHandle.getDownloadLimit()) +
                "\nUploaded: " + Helpers.byteToMB(this._torrentHandle.getStatus().getTotalUpload()) + "MB" +
                " Uploading at: " + Helpers.byteToMB(this._torrentHandle.getStatus().getUploadRate()) + "MB/s" +
-               " limited to " + Helpers.byteToMB(this._torrentHandle.getUploadLimit());
+               " limited to " + Helpers.byteToMB(this._torrentHandle.getUploadLimit()) +
+               "\nFiles:" + allFiles;
     }
 
     public int getPercentDownloaded() {

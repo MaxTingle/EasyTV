@@ -12,6 +12,19 @@ public final class TorrentManager
     private ArrayList<Torrent> _torrents        = new ArrayList<>();
     private int                _paginationIndex = 0;
 
+    public static enum SortMode
+    {
+        SEEDERS,
+        LEECHERS,
+        SIZE
+    }
+
+    public static enum SortDirection
+    {
+        ASC,
+        DESC
+    }
+
     /**
      * Searches all the torrent sources found in the searchIn array, without logging progress
      *
@@ -25,6 +38,7 @@ public final class TorrentManager
 
     /**
      * Searches all the torrent sources found in the searchIn array, with the logging process option
+     *
      * @param showProgress Whether or not the write to the Messager when the searcher progresses
      * @return The results which have a title that matches more than the config match threshold
      * @throws Exception             There was an exception while searching
@@ -122,9 +136,10 @@ public final class TorrentManager
 
     /**
      * Loads all the unique torrents (URL based uniqueness) into the torrents array, with showing progress as specified
+     *
      * @param showProgress Whether or not the write to the Messager when the searcher progresses
      * @return The number of items loaded
-    */
+     */
     public int load(String searchTerms, String[] searchIn, boolean showProgress) throws Exception {
         ArrayList<Torrent> torrents = TorrentManager.search(searchTerms, searchIn, showProgress);
         this._setIDs(torrents);
@@ -143,16 +158,18 @@ public final class TorrentManager
 
     /**
      * Checks if any torrents are currently loaded
+     *
      * @return Whether or not any torrents are loaded (torrents array size > 0)
-    */
+     */
     public boolean hasTorrents() {
         return this._torrents.size() > 0;
     }
 
     /**
      * Gets the array list used for pagination and such, by the torrents instance
+     *
      * @return All the loaded torrents
-    */
+     */
     public ArrayList<Torrent> getTorrents() {
         return this._torrents;
     }
@@ -161,7 +178,7 @@ public final class TorrentManager
         ArrayList<Torrent> downloadingTorrents = new ArrayList<>();
 
         this._torrents.forEach((Torrent torrent) -> {
-            if(torrent.getState() == TorrentState.DOWNLOADING || torrent.getState() == TorrentState.DOWNLOADING_META) {
+            if (torrent.getState() == TorrentState.DOWNLOADING || torrent.getState() == TorrentState.DOWNLOADING_META) {
                 downloadingTorrents.add(torrent);
             }
         });
@@ -191,17 +208,19 @@ public final class TorrentManager
 
     /**
      * Gets n number of torrents from the internal torrents array, starting from 0
+     *
      * @return The array of torrents to the size of howMany
-    */
+     */
     public Torrent[] get(int howMany) {
         return this.get(howMany, 0);
     }
 
     /**
      * Gets n number of torrents from the internal torrents array, starting from n. Always returns the specified number of torrents
+     *
      * @param howMany How many torrents to load, if howMany + startIndex > size, startIndex will be cutdown to match
      * @return An array the size of howMany, populated with the torrents
-    */
+     */
     public Torrent[] get(int howMany, int startIndex) {
         /* Requesting more than there is */
         int diff = this._torrents.size() - (startIndex + howMany);
@@ -279,18 +298,5 @@ public final class TorrentManager
 
         String id = sb.toString();
         return usedIDs.indexOf(id) == -1 ? id : this._generateId(usedIDs, iterations + 1);
-    }
-
-    public static enum SortMode
-    {
-        SEEDERS,
-        LEECHERS,
-        SIZE
-    }
-
-    public static enum SortDirection
-    {
-        ASC,
-        DESC
     }
 }

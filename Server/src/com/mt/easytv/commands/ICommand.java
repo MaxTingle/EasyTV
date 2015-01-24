@@ -12,5 +12,5 @@ public interface ICommand
      *
      * @param args The array of arguments the command was executed with
      */
-    void processCommand(CommandArgument[] args) throws Exception;
+    void processCommand(CommandArgumentList args) throws Exception;
 }

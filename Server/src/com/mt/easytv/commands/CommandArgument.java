@@ -1,7 +1,5 @@
 package com.mt.easytv.commands;
 
-import java.util.ArrayList;
-
 /**
  * The container class for a single command argument
  * and the value associated with it. Also contains
@@ -42,14 +40,14 @@ public final class CommandArgument implements Cloneable
      *
      * @param args The arguments split by space
      * @return The arguments, re-joined, filled out into an array of
-     *         the name of the argument and the value associated.
-     *         Can have null argument but value to allow for
-     *         {command} {implicit arg value}
-     *         Can also have null value to allow for boolean args like
-     *         {command} -{arg name}
+     * the name of the argument and the value associated.
+     * Can have null argument but value to allow for
+     * {command} {implicit arg value}
+     * Can also have null value to allow for boolean args like
+     * {command} -{arg name}
      */
-    public static CommandArgument[] fromArray(String[] args) throws ArgumentNotFoundException {
-        ArrayList<CommandArgument> commandArguments = new ArrayList<>();
+    public static CommandArgumentList fromArray(String[] args) throws ArgumentNotFoundException {
+        CommandArgumentList commandArguments = new CommandArgumentList();
         CommandArgument currentCommand = new CommandArgument();
         boolean previousWasString = false;
 
@@ -81,7 +79,7 @@ public final class CommandArgument implements Cloneable
             commandArguments.add(currentCommand);
         }
 
-        return commandArguments.toArray(new CommandArgument[commandArguments.size()]);
+        return commandArguments;
     }
 
     @Override

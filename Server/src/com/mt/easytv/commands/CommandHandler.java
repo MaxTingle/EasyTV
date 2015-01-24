@@ -1,7 +1,7 @@
 package com.mt.easytv.commands;
 
 import com.mt.easytv.connectivity.Client;
-import com.mt.easytv.interaction.Messager;
+import com.mt.easytv.connectivity.ClientMessage;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -144,7 +144,7 @@ public final class CommandHandler
         Command command = new Command()
         {
             @Override
-            public void processCommand(CommandArgument[] args) throws Exception {
+            public void processCommand(CommandArgumentList args) throws Exception {
                 if (cliAction == null) {
                     throw new NotImplementedException();
                 }
@@ -153,7 +153,7 @@ public final class CommandHandler
             }
 
             @Override
-            public Object processCommand(CommandArgument[] args, Client client) throws Exception {
+            public Object[] processCommand(CommandArgumentList args, Client client) throws Exception {
                 if (clientAction == null) {
                     throw new NotImplementedException();
                 }
@@ -175,8 +175,8 @@ public final class CommandHandler
      *
      * @param commandName The command to search for
      * @return Whether or not the command was found
-     *         and removed
-    */
+     * and removed
+     */
     public boolean removeCommand(@NotNull String commandName) {
         for (Command command : this._commands) {
             if (commandName.equals(command.command)) {
@@ -208,12 +208,25 @@ public final class CommandHandler
      *
      * @param commandFull The command and arguments
      *                    EG: quit -force yes
-     * @throws java.lang.Exception Exception thrown by the command
-     * @throws com.mt.easytv.commands.CommandNotFoundException Failed to find the command to execute
+     * @throws java.lang.Exception                              Exception thrown by the command
+     * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
-    */
+     */
     public void processCommand(String commandFull) throws Exception {
-        this._processCommand(commandFull, null, false);
+        /* Building up argument array */
+        String[] commandParts = commandFull.split(" ");
+
+        if (commandParts.length < 1) {
+            throw new CommandNotFoundException(commandFull);
+        }
+
+        String[] argumentParts = new String[commandParts.length - 1];
+        System.arraycopy(commandParts, 1, argumentParts, 0, commandParts.length - 1);
+
+        CommandArgumentList args = CommandArgument.fromArray(argumentParts);
+        Command command = this._findCommand(commandParts[0], args, false);
+
+        command.processCommand(args);
     }
 
     /**
@@ -222,14 +235,15 @@ public final class CommandHandler
      * and execute said command
      * Only executes CLIENT or ANY based commands.
      *
-     * @param commandFull The command and arguments EG: quit -force yes
-     * @param client      The client that wants to execute the given command
-     * @throws java.lang.Exception Exception thrown by the command
-     * @throws com.mt.easytv.commands.CommandNotFoundException Failed to find the command to execute
+     * @param clientMessage The command from the client
+     * @param client        The client that wants to execute the given command
+     * @throws java.lang.Exception                              Exception thrown by the command
+     * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
-    */
-    public Object processCommand(String commandFull, Client client) throws Exception {
-        return this._processCommand(commandFull, client, true);
+     */
+    public Object[] processCommand(ClientMessage clientMessage, Client client) throws Exception {
+        Command command = this._findCommand(clientMessage.request, clientMessage.getCommandArguments(), true);
+        return command.processCommand(clientMessage.getCommandArguments(), client);
     }
 
     /**
@@ -260,10 +274,10 @@ public final class CommandHandler
      * through from the BufferedReaders.
      * Not blocking
      *
-     * @throws java.lang.Exception Exception thrown by the command
-     * @throws com.mt.easytv.commands.CommandNotFoundException Failed to find the command to execute
+     * @throws java.lang.Exception                              Exception thrown by the command
+     * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
-    */
+     */
     public void read() throws Exception {
         for (BufferedReader reader : this._readers) {
             this.readFrom(reader);
@@ -277,12 +291,12 @@ public final class CommandHandler
      * Not blocking
      *
      * @param reader The BufferedReader to read the command line from
-     * @throws java.lang.Exception Exception thrown by the command
-     * @throws com.mt.easytv.commands.CommandNotFoundException Failed to find the command to execute
+     * @throws java.lang.Exception                              Exception thrown by the command
+     * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
      */
     public void readFrom(BufferedReader reader) throws Exception {
-        if(reader.ready()) {
+        if (reader.ready()) {
             String line = reader.readLine();
 
             if (line != null) {
@@ -296,7 +310,7 @@ public final class CommandHandler
      * all from the list of command sources
      *
      * @throws java.io.IOException Failed closing a reader
-    */
+     */
     public void clearReaders() throws IOException {
         for (BufferedReader reader : this._readers) {
             reader.close();
@@ -305,7 +319,7 @@ public final class CommandHandler
         this._readers.clear();
     }
 
-    private void _processCommandArguments(Command command, CommandArgument[] args) throws ArgumentNotFoundException {
+    private void _checkCommandArguments(Command command, CommandArgumentList args) throws ArgumentNotFoundException {
         if (!command.allowNullArgument) {
             for (CommandArgument arg : args) {
                 if (arg.argument == null) {
@@ -315,41 +329,23 @@ public final class CommandHandler
         }
     }
 
-    private Object _processCommand(String commandFull, Client client, boolean isClientCommand) throws Exception {
-        /* Building up argument array */
-        String[] commandParts = commandFull.split(" ");
-
-        if (commandParts.length < 1) {
-            throw new CommandNotFoundException(commandFull);
-        }
-
-        String[] argumentParts = new String[commandParts.length - 1];
-        System.arraycopy(commandParts, 1, argumentParts, 0, commandParts.length - 1);
-        CommandArgument[] args = CommandArgument.fromArray(argumentParts);
-
-        for (Command command : this._commands) {
-            if (command.command.equals(commandParts[0]) &&
+    private Command _findCommand(String command, CommandArgumentList args, boolean clientCommand) throws CommandNotFoundException, ArgumentNotFoundException {
+        for (Command possibleCommand : this._commands) {
+            if (possibleCommand.command.equals(command) &&
                 (
-                        (command.source == CommandSource.CLIENT && isClientCommand) ||
-                        (command.source == CommandSource.CLI && !isClientCommand) ||
-                        command.source == CommandSource.ANY
-                )) {
-                if (!isClientCommand) {
-                    Messager.addBufferLine(commandFull);
+                        (possibleCommand.source == CommandSource.CLIENT && clientCommand) ||
+                        (possibleCommand.source == CommandSource.CLI && !clientCommand) ||
+                        possibleCommand.source == CommandSource.ANY
+                )
+                    ) {
+                if (!possibleCommand.allowNullArgument) {
+                    this._checkCommandArguments(possibleCommand, args);
                 }
 
-                this._processCommandArguments(command, args);
-
-                if (isClientCommand) {
-                    return command.processCommand(args, client);
-                }
-                else {
-                    command.processCommand(args);
-                    return null;
-                }
+                return possibleCommand;
             }
         }
 
-        throw new CommandNotFoundException(commandParts[0]);
+        throw new CommandNotFoundException(command);
     }
 }

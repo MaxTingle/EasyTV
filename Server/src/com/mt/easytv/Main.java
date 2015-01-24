@@ -217,11 +217,14 @@ public final class Main
     private static void _addConfigDefaults() {
         /* System */
         Main.config.addDefault("sleepTime", "1000");
-        Main.config.addDefault("redrawTime", "250");
+        Main.config.addDefault("redrawTime", "1000");
 
         /* Server */
         Main.config.addDefault("port", "8080");
-        Main.config.addDefault("expectedMagic", "fireyourlaz0r");
+        Main.config.addDefault("username", "test");
+        Main.config.addDefault("password", "test");
+        Main.config.addDefault("serverMagic", "fYrEUrl4z0r");
+        Main.config.addDefault("clientMagic", "alLIlLlR1ightYth4n");
 
         /* Storage */
         Main.config.addDefault("storage", "storage");

@@ -4,7 +4,6 @@ import com.mt.easytv.Main;
 import com.mt.easytv.commands.ArgumentNotFoundException;
 import com.mt.easytv.commands.CommandHandler;
 import com.mt.easytv.commands.CommandNotFoundException;
-import com.mt.easytv.interaction.Message;
 import com.mt.easytv.interaction.Messager;
 
 import java.io.IOException;
@@ -24,8 +23,13 @@ public class Server
 
     public void checkWaitingClients() throws IOException {
         for (Client client : this.getWaitingClients()) {
-            if (client.checkMagic()) {
-                client.acceptConnection();
+            try {
+                if (client.checkAuth()) {
+                    client.acceptConnection();
+                }
+            }
+            catch (Exception e) {
+                client.message(new ServerMessage(client.getPreviousMessage().request, null, false, e.getMessage(), null));
             }
         }
     }
@@ -36,11 +40,13 @@ public class Server
                 continue;
             }
 
-            Message message = new Message(false);
+            ServerMessage message = new ServerMessage();
             Messager.attachMessage(message);
 
             try {
-                message.data = handler.processCommand(client.getLatestMessage(), client); //all errors use message and message will relay to client
+                ClientMessage clientMessage = client.getLatestMessage();
+                clientMessage.loadCommandArguments(); //checks its valid and loads it into an array
+                message.responseData = handler.processCommand(client.getLatestMessage(), client); //all errors use message and message will relay to client
                 message.success = true;
             }
             catch (Exception e) {
@@ -77,7 +83,9 @@ public class Server
 
                                               while (this._listening) {
                                                   try {
-                                                      this._clients.add(new Client(this._listener.accept()));
+                                                      Client client = new Client(this._listener.accept());
+                                                      client.message(Main.config.getValue("clientMagic")); //config with the client that we are what it expects
+                                                      this._clients.add(client);
                                                   }
                                                   catch (IOException e) {
                                                       if (this._listening) {
@@ -115,7 +123,7 @@ public class Server
         ArrayList<Client> activeClients = new ArrayList<>();
 
         for (Client client : this._clients) {
-            if (!client.isWaiting()) {
+            if (!client.isAccepted()) {
                 activeClients.add(client);
             }
         }
@@ -126,7 +134,7 @@ public class Server
         ArrayList<Client> waitingClients = new ArrayList<>();
 
         for (Client client : this._clients) {
-            if (client.isWaiting()) {
+            if (!client.isAccepted()) {
                 waitingClients.add(client);
             }
         }

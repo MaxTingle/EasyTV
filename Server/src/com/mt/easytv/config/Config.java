@@ -120,7 +120,7 @@ public class Config
      * the list of config properties (Properties are saved).
      *
      * @param removeExisting Whether or not to remove all existing properties
-    */
+     */
     public void loadDefaults(boolean removeExisting) {
         if (removeExisting) {
             this._properties.clear();
@@ -150,7 +150,7 @@ public class Config
      *
      * @param key The key associated with the property
      * @return The value or null if it's not found
-    */
+     */
     public String getValue(String key) {
         String value = this._properties.getProperty(key);
 
@@ -172,8 +172,8 @@ public class Config
      *
      * @param keys The array of property keys to get the value of
      * @return One value of all the property values
-     *         combined.
-    */
+     * combined.
+     */
     public String concatValues(String[] keys) {
         return this.concatValues(keys, "");
     }
@@ -185,7 +185,7 @@ public class Config
      *
      * @param keys The array of property keys to get the value of
      * @return One value of all the property values
-     *         combined.
+     * combined.
      */
     public String concatValues(String[] keys, String delimiter) {
         String fullValue = "";

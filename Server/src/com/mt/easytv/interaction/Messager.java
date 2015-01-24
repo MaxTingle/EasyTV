@@ -1,10 +1,13 @@
 package com.mt.easytv.interaction;
 
+import com.mt.easytv.connectivity.ServerMessage;
+import com.sun.istack.internal.Nullable;
+
 import java.util.ArrayList;
 
 public final class Messager
 {
-    private static Message _message; //attaching of client is done so single point of communication for cli and server
+    private static ServerMessage _message; //attaching of client is done so single point of communication for cli and server
     private static String _outputBuffer = "";
     private static String _clearOutputCMD;
     private static ArrayList<PersistentMessage> _persistentMessages = new ArrayList<>();
@@ -15,7 +18,7 @@ public final class Messager
         Messager._clearOutputCMD = System.getProperty("os.name").contains("Windows") ? "cls" : "clear";
     }
 
-    public static void attachMessage(Message message) {
+    public static void attachMessage(ServerMessage message) {
         Messager._message = message;
     }
 
@@ -28,10 +31,15 @@ public final class Messager
         Messager.message(msg);
     }
 
-    public static void message(String msg)
-    {
+    public static void message(String msg) {
+        Messager.message(msg, null);
+    }
+
+    public static void message(String msg, @Nullable Object[] data) {
         if (Messager._message != null) {
-            Messager._message.message = msg;
+            Messager._message.success = true;
+            Messager._message.response = msg;
+            Messager._message.responseData = data;
         }
         else {
             Messager.addBufferLine(msg);
@@ -47,7 +55,8 @@ public final class Messager
 
         if (Messager._message != null) {
             Messager._message.success = false;
-            Messager._message.message = message;
+            Messager._message.response = message;
+            Messager._message.responseData = new Object[]{e};
         }
         else {
             Messager.message(message);

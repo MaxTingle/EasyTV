@@ -21,6 +21,25 @@ public class TorrentAlertListener implements AlertListener
     private static final Logger                                              LOG        = Logger.getLogger(TorrentAlertAdapter.class);
     private static final Map<String, TorrentAlertListener.CallAlertFunction> CALL_TABLE = buildCallAlertTable();
 
+    private static final class CallAlertFunction
+    {
+        private final Method method;
+
+        public CallAlertFunction(Method method) {
+            this.method = method;
+        }
+
+        public void invoke(TorrentAlertListener adapter, Alert<?> alert) {
+            try {
+                this.method.invoke(adapter, alert);
+            }
+            catch (Throwable var4) {
+                TorrentAlertListener.LOG.warn(var4.toString());
+            }
+
+        }
+    }
+
     private static Map<String, TorrentAlertListener.CallAlertFunction> buildCallAlertTable() {
         HashMap map = new HashMap();
         Method[] var1 = TorrentAlertListener.class.getDeclaredMethods();
@@ -225,24 +244,5 @@ public class TorrentAlertListener implements AlertListener
     }
 
     public void torrentPrioritize(TorrentPrioritizeAlert alert) {
-    }
-
-    private static final class CallAlertFunction
-    {
-        private final Method method;
-
-        public CallAlertFunction(Method method) {
-            this.method = method;
-        }
-
-        public void invoke(TorrentAlertListener adapter, Alert<?> alert) {
-            try {
-                this.method.invoke(adapter, alert);
-            }
-            catch (Throwable var4) {
-                TorrentAlertListener.LOG.warn(var4.toString());
-            }
-
-        }
     }
 }

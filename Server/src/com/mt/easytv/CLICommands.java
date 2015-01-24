@@ -1,6 +1,7 @@
 package com.mt.easytv;
 
 import com.mt.easytv.commands.CommandArgument;
+import com.mt.easytv.commands.CommandArgumentList;
 import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.interaction.PersistentMessage;
 import com.mt.easytv.torrents.Torrent;
@@ -16,8 +17,8 @@ public class CLICommands
      * required:
      * __itemName__     **No key, should just the key of the config item
      */
-    public static void getConfig(CommandArgument[] args) {
-        if (args.length < 1) {
+    public static void getConfig(CommandArgumentList args) {
+        if (args.size() < 1) {
             Messager.message("getConfig requires the config name");
             return;
         }
@@ -39,8 +40,8 @@ public class CLICommands
      * required:
      * -__configItem__     **Key should be the name of the config item, value the value to set it to
      */
-    public static void setConfig(CommandArgument[] args) {
-        if (args.length < 1) {
+    public static void setConfig(CommandArgumentList args) {
+        if (args.size() < 1) {
             Messager.message("setConfig requires the config name and value. (-name \"value\")");
             return;
         }
@@ -63,7 +64,7 @@ public class CLICommands
         }
     }
 
-    public static void quit(CommandArgument[] args) {
+    public static void quit(CommandArgumentList args) {
         System.exit(0);
     }
 
@@ -77,36 +78,13 @@ public class CLICommands
      * -progress **Shows progress as loading
      * -sortBy   **What to sort by, must be desc
      */
-    public static void search(CommandArgument[] args) {
-        CommandArgument searchIn = null;
-        CommandArgument searchFor = null;
+    public static void search(CommandArgumentList args) {
+        String searchIn = args.getValue("searchIn");
+        String searchFor = args.getValue("search");
 
-        boolean progress = false;
-        int view = 0;
-        String sortBy = null;
-
-        for (CommandArgument arg : args) {
-            if (arg.argument.equals("searchIn")) {
-                searchIn = arg;
-            }
-            else if (arg.argument.equals("search")) {
-                searchFor = arg;
-            }
-            else if (arg.argument.equals("view")) {
-                if (arg.value != null) {
-                    view = Integer.parseInt(arg.value);
-                }
-                else {
-                    view = Integer.parseInt(Main.config.getValue("defaultTorrentListSize"));
-                }
-            }
-            else if (arg.argument.equals("progress")) {
-                progress = true;
-            }
-            else if (arg.argument.equals("sortBy")) {
-                sortBy = arg.value;
-            }
-        }
+        boolean progress = args.getValue("progress", null) != null;
+        int view = Integer.parseInt(args.getValue("view", Main.config.getValue("defaultTorrentListSize")));
+        String sortBy = args.getValue("sortBy");
 
         if (searchIn == null || searchFor == null) {
             Messager.message("search requires the what to search for(-search \"to search for\") and where to search(-searchin \"piratebay, piratebaylocal, kickass\").");
@@ -116,7 +94,7 @@ public class CLICommands
         Messager.message("Searching..");
 
         try {
-            int loadedCount = Main.torrentManager.load(searchFor.value, searchIn.value.split(","), progress);
+            int loadedCount = Main.torrentManager.load(searchFor, searchIn.split(","), progress);
             Messager.message("Loaded " + loadedCount + " torrents");
 
             if (sortBy != null) {
@@ -140,26 +118,17 @@ public class CLICommands
      * -size    **Specifies the number of torrents to load
      * -reset   **Resets the current index to 0
      */
-    public static void view(CommandArgument[] args) {
+    public static void view(CommandArgumentList args) {
         if (!Main.torrentManager.hasTorrents()) {
             Messager.message("No torrents loaded");
             return;
         }
 
-        int pageSize = Integer.parseInt(Main.config.getValue("defaultTorrentListSize"));
-
-        for (CommandArgument arg : args) {
-            if (arg.argument == null) {
-                pageSize = Integer.parseInt(arg.value);
-            }
-            else if (arg.argument.equals("size")) {
-                pageSize = Integer.parseInt(arg.value);
-            }
-            else if (arg.argument.equals("reset")) {
-                Main.torrentManager.resetPageIndex();
-            }
+        if (args.getValue("reset", null) != null) {
+            Main.torrentManager.resetPageIndex();
         }
 
+        int pageSize = Integer.parseInt((String) args.getValue("size", Main.config.getValue("defaultTorrentListSize"), true));
         Torrent[] torrents = Main.torrentManager.next(pageSize);
 
         for (Torrent torrent : torrents) {
@@ -172,18 +141,9 @@ public class CLICommands
      * -sortBy    **What to sort by [seeders,leechers,size]
      * -sortDir   **What direction to sort [asc,desc]
      */
-    public static void sort(CommandArgument[] args) {
-        String sortBy = null;
-        String sortDir = "desc";
-
-        for (CommandArgument arg : args) {
-            if (arg.argument.equals("sortBy")) { //== as argument can be null
-                sortBy = arg.value;
-            }
-            else if (arg.argument.equals("sortDir")) {
-                sortDir = arg.value;
-            }
-        }
+    public static void sort(CommandArgumentList args) {
+        String sortBy = args.getValue("sortBy");
+        String sortDir = args.getValue("sortDir", "desc");
 
         if (sortBy == null) {
             Messager.message("Sort requires the sortBy argument (sort -sortBy {sortMode} or sort {sortMode})");
@@ -206,18 +166,9 @@ public class CLICommands
      * -sticky **Whether or not to stick the torrent view
      * -unsticky **Whether or not to unstick the torrent view
      */
-    public static void viewOne(CommandArgument[] args) {
-        boolean makeUnsticky = false;
-        boolean makeSticky = false;
-
-        for (CommandArgument arg : args) {
-            if ("sticky".equals(arg.argument)) {
-                makeSticky = true;
-            }
-            else if ("unsticky".equals(arg.argument)) {
-                makeUnsticky = true;
-            }
-        }
+    public static void viewOne(CommandArgumentList args) {
+        boolean makeUnsticky = args.getValue("sticky", null) != null;
+        boolean makeSticky = args.getValue("unsticky", null) != null;
 
         if (makeSticky && makeUnsticky) {
             Messager.message("Cannot unstick and stick torrent at the same time!");
@@ -253,8 +204,6 @@ public class CLICommands
             }
         }
         else {
-
-
             Messager.message(torrent.toString());
         }
     }
@@ -263,13 +212,13 @@ public class CLICommands
      * Deletes a torrent's data
      * -id    **The ID of the torrent to delete
      */
-    public static void delete(CommandArgument[] args) throws Exception {
+    public static void delete(CommandArgumentList args) throws Exception {
         Torrent torrent = CLICommands._torrentFromArgs(args, true);
 
         if (torrent == null) {
             return;
         }
-        else if(torrent.getDownload().isDownloading() && !torrent.getDownload().stopDownload()) {
+        else if (torrent.getDownload().isDownloading() && !torrent.getDownload().stopDownload()) {
             Messager.message("Torrent failed to pause.");
             return;
         }
@@ -286,18 +235,18 @@ public class CLICommands
      * Stops a torrent downloading
      * -id    **The ID of the torrent to delete
      */
-    public static void stopDownload(CommandArgument[] args) throws Exception {
+    public static void stopDownload(CommandArgumentList args) throws Exception {
         Torrent torrent = CLICommands._torrentFromArgs(args, true);
 
         if (torrent == null) {
             return;
         }
-        else if(!torrent.getDownload().isDownloading()) {
+        else if (!torrent.getDownload().isDownloading()) {
             Messager.message("Torrent not downloading.");
             return;
         }
 
-        if(torrent.getDownload().stopDownload()) {
+        if (torrent.getDownload().stopDownload()) {
             Messager.message("Download stopped");
         }
         else {
@@ -310,25 +259,18 @@ public class CLICommands
      * -id    **The ID of the torrent to delete
      * -file  **The file to play if there are multiple
      */
-    public static void play(CommandArgument[] args) throws Exception {
+    public static void play(CommandArgumentList args) throws Exception {
         Torrent torrent = CLICommands._torrentFromArgs(args, true);
-        String fileToPlay = null;
-
-        for(CommandArgument arg : args) {
-            if("file".equals(arg.argument)) {
-                fileToPlay = arg.value;
-                break;
-            }
-        }
+        String fileToPlay = args.getValue("file");
 
         if (torrent == null) {
             return;
         }
-        else if(fileToPlay == null) {
+        else if (fileToPlay == null) {
             Messager.message("Please specify the torrent file you want to play.");
             return;
         }
-        else if(torrent.getState() != TorrentState.DOWNLOADED) {
+        else if (torrent.getState() != TorrentState.DOWNLOADED) {
             Messager.message("Torrent not downloaded.");
             return;
         }
@@ -341,16 +283,9 @@ public class CLICommands
      * -id      **The ID of the torrent to download
      * -force   **Whether or not to force redownload
      */
-    public static void download(CommandArgument[] args) throws Exception {
+    public static void download(CommandArgumentList args) throws Exception {
         Torrent torrent = CLICommands._torrentFromArgs(args, true);
-        boolean force = false;
-
-        for (CommandArgument arg : args) {
-            if ("force".equals(arg.argument)) {
-                force = true;
-                break;
-            }
-        }
+        boolean force = args.getValue("force", null) != null;
 
         if (torrent == null) {
             return;
@@ -373,8 +308,8 @@ public class CLICommands
         }
 
         PersistentMessage message = Messager.addPersistentMessage((String previousMessage) ->
-          "Downloading " + torrent.id + ": " + torrent.name + " download at " + torrent.getState() + " " +
-          (torrent.getState() == TorrentState.DOWNLOADING ? torrent.getDownload().getPercentDownloaded() + "%" : "")
+                                                                          "Downloading " + torrent.id + ": " + torrent.name + " download at " + torrent.getState() + " " +
+                                                                          (torrent.getState() == TorrentState.DOWNLOADING ? torrent.getDownload().getPercentDownloaded() + "%" : "")
         );
 
         torrent.getDownload().download((int percent) -> {
@@ -382,7 +317,7 @@ public class CLICommands
                 Messager.message("Downloading " + torrent.id + ": " + torrent.name + " completed");
                 Messager.removePersistentMessage(message);
             }
-            else if(percent == -1) {//download cancelled
+            else if (percent == -1) {//download cancelled
                 Messager.message("Downloading " + torrent.id + ": " + torrent.name + " cancelled");
                 Messager.removePersistentMessage(message);
             }
@@ -392,25 +327,12 @@ public class CLICommands
     /**
      * Unsticks all stuck messages
      */
-    public static void unstickAll(CommandArgument[] args) {
+    public static void unstickAll(CommandArgumentList args) {
         Messager.removeAllPersistentMessages();
     }
 
-    private static Torrent _torrentFromArgs(CommandArgument[] args, boolean allowEmpty) {
-        String id = null;
-
-        for (CommandArgument arg : args) {
-            if (arg.argument == null) {
-                if (allowEmpty) { //sub if so else if doesn't need not null check
-                    id = arg.value; //so can just do {command} adfsdfsdf
-                    break;
-                }
-            }
-            else if (arg.argument.equals("id")) {
-                id = arg.value;
-                break;
-            }
-        }
+    private static Torrent _torrentFromArgs(CommandArgumentList args, boolean allowEmpty) {
+        String id = args.getValue("id", allowEmpty);
 
         if (id == null) {
             Messager.message("The torrent id is required. (viewOne -id {id} or viewOne {id})");

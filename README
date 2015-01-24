@@ -1,0 +1,9 @@
+Connection implementation:
+    Client attempts to create socket
+    Client sends magic
+    Server validates client magic
+    Server responds with magic
+    Client validates server magic
+    Client sends auth
+    Server validates auth
+    Client free to do commands

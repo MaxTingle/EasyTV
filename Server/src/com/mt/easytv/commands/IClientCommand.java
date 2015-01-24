@@ -18,5 +18,5 @@ public interface IClientCommand
      * @return The result that might normally be printed to screen, so it can be added to a
      * message and passed back to the client
      */
-    Object processCommand(CommandArgument[] args, Client client) throws Exception;
+    Object[] processCommand(CommandArgumentList args, Client client) throws Exception;
 }

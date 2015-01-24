@@ -11,7 +11,7 @@ public class Command implements ICommand, IClientCommand
     public String command = "";
 
     /**
-     * Whether or not to allow arguments in the CommandArgument[] array
+     * Whether or not to allow arguments in the CommandArgumentList array
      * passed to the processCommand function to have the value not null
      * and the argument null
      */
@@ -22,11 +22,11 @@ public class Command implements ICommand, IClientCommand
      */
     public CommandHandler.CommandSource source;
 
-    public void processCommand(CommandArgument[] args) throws Exception {
+    public void processCommand(CommandArgumentList args) throws Exception {
         throw new NotImplementedException();
     }
 
-    public Object processCommand(CommandArgument[] args, Client client) throws Exception {
+    public Object[] processCommand(CommandArgumentList args, Client client) throws Exception {
         throw new NotImplementedException();
     }
 }

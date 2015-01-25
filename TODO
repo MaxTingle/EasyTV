@@ -11,7 +11,6 @@ SERVER:
         - Add piratebaylocal search factory and multi thread the searching
 
     FIXES:
-        - Code formatting
         - Messager redraw ugly in an IDE embedded terminal
 
     TESTS:
@@ -20,8 +19,9 @@ SERVER:
 
 CLIENT:
     - Interaction with server (detection, connection, auth, commands)
-    - GUI and settings GUI
-    - Everything else
+    - Run command execution
+    - Make command executor get commands actually get the list of commands from the server
+    - MainActivity GUI
 
 NOTEPAD:
 search -search "batman the dark knight" -searchIn piratebaylocal -sortBy seeders -view -progress

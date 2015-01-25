@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1">
+
+    <TextView
+        android:id="@+id/lblResponse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:linksClickable="false"
+        android:singleLine="true"
+        android:text="Response Message"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+        android:textColor="@android:color/holo_blue_light" />
+
+    <EditText
+        android:id="@+id/txtResponseMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.21"
+        android:ems="10"
+        android:inputType="textMultiLine" />
+
+    <Space
+        android:id="@+id/spaceResponseData"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.12"
+        android:text="Arguments" />
+
+    <TextView
+        android:id="@+id/lblResponseData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:linksClickable="false"
+        android:singleLine="true"
+        android:text="Response Data"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+        android:textColor="@android:color/holo_blue_light" />
+
+    <EditText
+        android:id="@+id/txtResponseData"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="0.65"
+        android:ems="10"
+        android:inputType="textMultiLine" />
+
+</LinearLayout>

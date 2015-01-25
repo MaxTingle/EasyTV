@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <TextView
+            android:id="@+id/lblCommand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:linksClickable="false"
+            android:singleLine="true"
+            android:text="Command"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+            android:textColor="@android:color/holo_blue_light" />
+
+        <ImageButton
+            android:id="@+id/btnLoadCommand"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:clickable="true"
+            android:src="@android:drawable/ic_input_get" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/txtCommand"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autoText="false"
+        android:editable="true"
+        android:elegantTextHeight="true"
+        android:enabled="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:inputType="text"
+        android:phoneNumber="true"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:textIsSelectable="true" />
+
+    <Space
+        android:id="@+id/spaceArguments"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.25"
+        android:text="Arguments" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <TextView
+            android:id="@+id/lblArguments"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:linksClickable="false"
+            android:singleLine="true"
+            android:text=" Arguments"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+            android:textColor="@android:color/holo_blue_light" />
+
+        <ImageButton
+            android:id="@+id/btnAddArgument"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:clickable="true"
+            android:nestedScrollingEnabled="false"
+            android:src="@android:drawable/ic_menu_add" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/listArguments"
+        android:layout_width="match_parent"
+        android:layout_height="234dp"
+        android:layout_weight="0.72"
+        android:clickable="true"
+        android:focusableInTouchMode="false" />
+
+    <Button
+        android:id="@+id/btnExecute"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Execute" />
+
+</LinearLayout>

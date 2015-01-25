@@ -45,6 +45,9 @@ public class Server
 
             try {
                 ClientMessage clientMessage = client.getLatestMessage();
+                message.request = clientMessage.request;
+                message.args = clientMessage.args;
+
                 clientMessage.loadCommandArguments(); //checks its valid and loads it into an array
                 message.responseData = handler.processCommand(client.getLatestMessage(), client); //all errors use message and message will relay to client
                 message.success = true;

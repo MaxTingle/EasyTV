@@ -5,7 +5,7 @@ import com.sun.istack.internal.Nullable;
 
 public class ServerMessage
 {
-    public String   command;
+    public String   request;
     public Object[] args;
     public boolean  success;
     public String   response;
@@ -15,13 +15,13 @@ public class ServerMessage
 
     }
 
-    public ServerMessage(@NotNull String command, @Nullable Object[] args) {
-        this.command = command;
+    public ServerMessage(@NotNull String request, @Nullable Object[] args) {
+        this.request = request;
         this.args = args;
     }
 
-    public ServerMessage(@NotNull String command, @Nullable Object[] args, @NotNull boolean success, @Nullable String response, @Nullable Object[] responseData) {
-        this(command, args);
+    public ServerMessage(@NotNull String request, @Nullable Object[] args, @NotNull boolean success, @Nullable String response, @Nullable Object[] responseData) {
+        this(request, args);
         this.success = success;
         this.response = response;
         this.responseData = responseData;

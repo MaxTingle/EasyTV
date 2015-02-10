@@ -26,4 +26,9 @@ public class ServerMessage
         this.response = response;
         this.responseData = responseData;
     }
+
+    public ServerMessage(ClientMessage respondingTo) {
+        this.request = respondingTo.request;
+        this.args = respondingTo.args;
+    }
 }

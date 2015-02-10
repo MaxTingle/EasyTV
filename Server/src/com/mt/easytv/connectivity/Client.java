@@ -1,7 +1,9 @@
 package com.mt.easytv.connectivity;
 
 import com.mt.easytv.Main;
+import com.mt.easytv.commands.CommandArgument;
 import com.mt.easytv.commands.CommandArgumentList;
+import com.mt.easytv.interaction.Messager;
 
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
@@ -16,10 +18,11 @@ public class Client
     private XMLEncoder               _encoder;
     private XMLDecoder               _decoder;
     private BufferedReader           _reader;
-    private boolean                  _accepted;
     private ClientMessage            _magic;
     private ClientMessage            _auth;
     private ArrayList<ClientMessage> _messages;
+    private boolean _accepted        = false;
+    private boolean _sentServerMagic = false;
 
     public Client(Socket socket) throws IOException {
         this._socket = socket;
@@ -85,8 +88,41 @@ public class Client
         return this._magic.request.equals(Main.config.getValue("serverMagic"));
     }
 
-    public void acceptConnection() {
+    public boolean hasSentMagic() {
+        return this._magic != null;
+    }
+
+    public boolean hasSentAuth() {
+        return this._auth != null;
+    }
+
+    public void sendServerMagic() throws IOException {
+        if (this._sentServerMagic) {
+            return;
+        }
+
+        this._sentServerMagic = true;
+        this.message(this._magic.buildReply(true, "Magic correct", new CommandArgument("magic", Main.config.getValue("clientMagic"))));
+    }
+
+    public void sendAcceptedAuth() throws IOException {
+        this.message(this._auth.buildReply(true, "Accepted auth"));
+    }
+
+    public void acceptConnection() throws IOException {
+        if (this._accepted) {
+            Messager.immediateMessage("Warning, acceptConnection called twice");
+            return;
+        }
+
         this._accepted = true;
+        this.message(this._auth.buildReply(true, "Accepted auth"));
+    }
+
+    public void denyConnection() throws IOException {
+        this._accepted = false;
+        this.message(this._auth.buildReply(false, "Invalid auth"));
+        this.closeConnection();
     }
 
     public void closeConnection() throws IOException {

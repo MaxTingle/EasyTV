@@ -24,8 +24,20 @@ public class Server
     public void checkWaitingClients() throws IOException {
         for (Client client : this.getWaitingClients()) {
             try {
-                if (client.checkAuth()) {
-                    client.acceptConnection();
+                if (client.checkMagic()) {
+                    client.sendServerMagic();
+
+                    if (client.checkAuth()) {
+                        client.sendAcceptedAuth();
+                        client.acceptConnection();
+                    }
+                    else if (client.hasSentAuth()) {
+                        client.denyConnection();
+                        this._clients.remove(client);
+                    }
+                }
+                else if (client.hasSentMagic()) {
+                    client.denyConnection();
                 }
             }
             catch (Exception e) {
@@ -87,7 +99,6 @@ public class Server
                                               while (this._listening) {
                                                   try {
                                                       Client client = new Client(this._listener.accept());
-                                                      client.message(Main.config.getValue("clientMagic")); //config with the client that we are what it expects
                                                       this._clients.add(client);
                                                   }
                                                   catch (IOException e) {
@@ -107,6 +118,10 @@ public class Server
     }
 
     public void stopListening() throws IOException {
+        for (Client client : this._clients) {
+            client.closeConnection();
+        }
+
         this._listening = false;
 
         if (this._listener != null) {

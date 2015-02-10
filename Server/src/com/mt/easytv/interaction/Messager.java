@@ -9,14 +9,9 @@ public final class Messager
 {
     private static ServerMessage _message; //attaching of client is done so single point of communication for cli and server
     private static String _outputBuffer = "";
-    private static String _clearOutputCMD;
     private static ArrayList<PersistentMessage> _persistentMessages = new ArrayList<>();
     private static Thread _redrawThread;
     private static boolean _autoRedrawing = false;
-
-    public static void init() {
-        Messager._clearOutputCMD = System.getProperty("os.name").contains("Windows") ? "cls" : "clear";
-    }
 
     public static void attachMessage(ServerMessage message) {
         Messager._message = message;
@@ -28,7 +23,7 @@ public final class Messager
 
     public static void immediateMessage(String msg) {
         System.out.println(msg);
-        Messager.message(msg);
+        Messager.addBufferLine(msg);
     }
 
     public static void message(String msg) {
@@ -109,6 +104,10 @@ public final class Messager
         Messager._persistentMessages.clear();
     }
 
+    public static void clearBuffer() {
+        Messager._outputBuffer = "";
+    }
+
     public static void redrawBuffer() {
         Messager.clearOutput();
         System.out.print(Messager._outputBuffer);
@@ -158,11 +157,8 @@ public final class Messager
     }
 
     public static void clearOutput() {
-        try {
-            Runtime.getRuntime().exec(Messager._clearOutputCMD);
-        }
-        catch (Exception e) {
-            System.out.flush(); //prints a bunch of /r/n's, messy and ugly but a fallback none the less
+        for (int i = 0; i < 11; i++) {
+            System.out.println(""); //Screw this stupid language and its lack of ability to properly clear the console.
         }
     }
 

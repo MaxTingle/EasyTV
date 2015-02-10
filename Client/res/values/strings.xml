@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">EasyTV Client</string>
     <string name="run_command_name">Run command</string>
+    <string name="view_debug_name">View debug info</string>
 </resources>

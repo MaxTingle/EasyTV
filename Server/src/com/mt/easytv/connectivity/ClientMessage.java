@@ -40,4 +40,20 @@ public class ClientMessage
     public CommandArgumentList getCommandArguments() {
         return this.commandArguments;
     }
+
+    public ServerMessage buildReply(boolean success, String response) {
+        return this.buildReply(success, response, new CommandArgument[0]);
+    }
+
+    public ServerMessage buildReply(boolean success, String response, CommandArgument responseData) {
+        return this.buildReply(success, response, new CommandArgument[]{responseData});
+    }
+
+    public ServerMessage buildReply(boolean success, String response, CommandArgument[] responseData) {
+        ServerMessage message = new ServerMessage(this);
+        message.response = response;
+        message.success = success;
+        message.responseData = responseData;
+        return message;
+    }
 }

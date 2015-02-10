@@ -9,7 +9,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
 import com.mt.easytv.R;
+import com.mt.easytv.connectivity.ClientMessage;
 import com.mt.easytv.connectivity.CommandArgument;
+import com.mt.easytv.connectivity.IReplyListener;
 import com.mt.easytv.connectivity.ServerMessage;
 
 import java.util.ArrayList;
@@ -145,10 +147,26 @@ public class CommandExecutor extends Activity
     }
 
     public void executeCommand() {
-        EditText txtCommand = (EditText) this.findViewById(R.id.txtCommand);
-        ServerMessage response = MainActivity.client.run(txtCommand.getText().toString(), getCommandArguments());
-        CommandResponse.setResponse(response);
-        this.setIntent(new Intent(this, CommandResponse.class));
+        try {
+            EditText txtCommand = (EditText) this.findViewById(R.id.txtCommand);
+            final Activity self = this;
+
+            new ClientMessage(txtCommand.getText().toString(), this.getCommandArguments())
+                    .onReply(new IReplyListener()
+                    {
+                        @Override
+                        public void onReply(ServerMessage response, ClientMessage original) {
+                            CommandResponse.setResponse(response);
+                            self.setIntent(new Intent(self, CommandResponse.class)); //Need to preserve activity, crappy delegates.
+                        }
+                    });
+        }
+        catch (Exception e) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Error sending command")
+                    .setMessage(e.getMessage())
+                    .show();
+        }
     }
 
     private void _initList() {

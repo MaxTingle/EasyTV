@@ -22,15 +22,18 @@ import uk.co.caprica.vlcj.version.LibVlcVersion;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public final class Main
 {
+    private static final String   LIB_JAR_PATH = "/";
+    private static final String[] LIB_EXT      = {"so", "dll"};
+    private static final String[] LIBS         = {"jlibtorrent"};
+
     private static final String CONFIG_PATH = "storage";
     private static final String CONFIG_NAME = "config.properties";
     public static Config config;
@@ -49,10 +52,16 @@ public final class Main
     private static Server _server;
 
     public static void main(String[] args) throws Exception {
+        if (!RuntimeUtil.isWindows() && !RuntimeUtil.isNix()) {
+            throw new Exception("Your operating system is not supported.");
+        }
+
+        /* Load libs and startup core */
+        Main._exportLibs();
         Main._checkVlcJInstall();
+        Main._checkJlibtorrentInstall();
 
         Main._initShutdownHook();
-        Messager.init();
 
         /* Config */
         Messager.immediateMessage("Loading config..");
@@ -105,15 +114,60 @@ public final class Main
         }
     }
 
-    private static void _checkVlcJInstall() throws Exception {
-        if (!RuntimeUtil.isWindows() && !RuntimeUtil.isNix()) {
-            throw new Exception("Your operating system is not supported.");
+    private static void _exportLibs() throws IOException {
+        if (new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath()).isDirectory()) {
+            return; //running from ide or other environment, not a jar.
         }
 
+        for (int libIndex = 0; libIndex < Main.LIBS.length; libIndex++) {
+            for (int extIndex = 0; extIndex < Main.LIB_EXT.length; extIndex++) {
+                String path = Main.LIBS[libIndex] + "." + Main.LIB_EXT[extIndex];
+
+                File exportFile = new File(path);
+                exportFile.deleteOnExit();
+                if (exportFile.exists()) {
+                    continue;
+                }
+                else if (!exportFile.createNewFile()) {
+                    throw new FileAlreadyExistsException("Failed to create export file " + path);
+                }
+
+                InputStream resourceStream = Main.class.getResourceAsStream(Main.LIB_JAR_PATH + path);
+                if (resourceStream == null) {
+                    throw new FileNotFoundException("Library " + Main.LIBS[libIndex] + " failed to load. Not found.");
+                }
+
+                FileOutputStream exportStream = new FileOutputStream(exportFile);
+
+                try {
+                    byte[] resourceBuffer = new byte[1024];
+                    int resourceBytes;
+
+                    while ((resourceBytes = resourceStream.read(resourceBuffer)) != -1) {
+                        exportStream.write(resourceBuffer, 0, resourceBytes);
+                    }
+                }
+                finally {
+                    resourceStream.close();
+                    exportStream.close();
+                }
+            }
+        }
+    }
+
+    private static void _checkJlibtorrentInstall() throws Exception {
+        try {
+            Class.forName("com.frostwire.jlibtorrent.swig.libtorrent_jni");
+        }
+        catch (UnsatisfiedLinkError e) {
+            throw new Exception("JLibtorrent install not found. (" + e.getMessage() + ")");
+        }
+    }
+
+    private static void _checkVlcJInstall() throws Exception {
         NativeDiscovery discoverer = new NativeDiscovery();
         discoverer.discover();
 
-        // discovery()'s method return value is WRONG on Linux
         try {
             LibVlcVersion.getVersion();
         }
@@ -266,6 +320,7 @@ public final class Main
     }
 
     private static void _addCommands() {
+        Main.commandHandler.addCommand("clear", CLICommands::clear);
         Main.commandHandler.addCommand("quit", CLICommands::quit);
         Main.commandHandler.addCommand("getConfig", CLICommands::getConfig);
         Main.commandHandler.addCommand("setConfig", CLICommands::setConfig);

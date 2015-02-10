@@ -68,6 +68,11 @@ public class CLICommands
         System.exit(0);
     }
 
+    public static void clear(CommandArgumentList args) {
+        Messager.clearOutput();
+        Messager.clearBuffer();
+    }
+
     /**
      * Torrent searching / loading
      * required:

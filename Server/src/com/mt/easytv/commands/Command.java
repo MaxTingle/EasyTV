@@ -1,7 +1,7 @@
 package com.mt.easytv.commands;
 
-import com.mt.easytv.connectivity.Client;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import uk.co.maxtingle.communication.client.Client;
 
 public class Command implements ICommand, IClientCommand
 {

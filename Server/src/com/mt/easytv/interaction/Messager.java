@@ -1,19 +1,19 @@
 package com.mt.easytv.interaction;
 
-import com.mt.easytv.connectivity.ServerMessage;
 import com.sun.istack.internal.Nullable;
+import uk.co.maxtingle.communication.common.Message;
 
 import java.util.ArrayList;
 
 public final class Messager
 {
-    private static ServerMessage _message; //attaching of client is done so single point of communication for cli and server
+    private static Message _message; //attaching of client is done so single point of communication for cli and server
     private static String _outputBuffer = "";
     private static ArrayList<PersistentMessage> _persistentMessages = new ArrayList<>();
     private static Thread _redrawThread;
     private static boolean _autoRedrawing = false;
 
-    public static void attachMessage(ServerMessage message) {
+    public static void attachMessage(Message message) {
         Messager._message = message;
     }
 
@@ -33,8 +33,8 @@ public final class Messager
     public static void message(String msg, @Nullable Object[] data) {
         if (Messager._message != null) {
             Messager._message.success = true;
-            Messager._message.response = msg;
-            Messager._message.responseData = data;
+            Messager._message.request = msg;
+            Messager._message.params = data;
         }
         else {
             Messager.addBufferLine(msg);
@@ -50,8 +50,8 @@ public final class Messager
 
         if (Messager._message != null) {
             Messager._message.success = false;
-            Messager._message.response = message;
-            Messager._message.responseData = new Object[]{e};
+            Messager._message.request = message;
+            Messager._message.params = new Object[]{e};
         }
         else {
             Messager.message(message);

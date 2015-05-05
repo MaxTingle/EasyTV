@@ -2,25 +2,20 @@ SERVER:
     OPTIMIZATIONS:
 
     IMPLEMENTATIONS:
-        - kickasstorrents searching
-        - piratebay searching
-        - TorrentManager loading torrents from a previous shutdown, not sure if Session state does this, look into it using the sync manager on bootup
-        - Torrent file viewing
         - Server sending updates to all clients when a torrent session update is pushed. Server sending updates to all clients when vlcj has event
-        - Server displaying all downloading status on jframe
+        - Server displaying all downloading status on the jframe
         - Add piratebaylocal search factory and multi thread the searching
+        - kickasstorrents searching
+        - piratebay site searching
+        - TorrentManager loading torrents from a previous shutdown, not sure if Session state does this, look into it using the sync manager on bootup
 
     FIXES:
         - Messager redraw ugly in an IDE embedded terminal
 
     TESTS:
-        - Stop torrent downloading
         - Using finished thing directly from jar
 
 CLIENT:
-    - Interaction with server (detection, connection, auth, commands)
-    - Run command execution
-    - Make command executor get commands actually get the list of commands from the server
     - MainActivity GUI
 
 NOTEPAD:

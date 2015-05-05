@@ -7,7 +7,6 @@ import com.mt.easytv.commands.ArgumentNotFoundException;
 import com.mt.easytv.commands.CommandHandler;
 import com.mt.easytv.commands.CommandNotFoundException;
 import com.mt.easytv.config.Config;
-import com.mt.easytv.connectivity.Server;
 import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.torrents.Torrent;
 import com.mt.easytv.torrents.TorrentManager;
@@ -19,6 +18,8 @@ import uk.co.caprica.vlcj.player.embedded.windows.Win32FullScreenStrategy;
 import uk.co.caprica.vlcj.player.embedded.x.XFullScreenStrategy;
 import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import uk.co.caprica.vlcj.version.LibVlcVersion;
+import uk.co.maxtingle.communication.Debugger;
+import uk.co.maxtingle.communication.server.Server;
 
 import javax.swing.*;
 import java.awt.*;
@@ -50,6 +51,7 @@ public final class Main
     public static Torrent                          playingTorrent;
 
     private static Server _server;
+    private static boolean _running = true;
 
     public static void main(String[] args) throws Exception {
         if (!RuntimeUtil.isWindows() && !RuntimeUtil.isNix()) {
@@ -87,19 +89,27 @@ public final class Main
         Main.commandHandler.addReader(new BufferedReader(new InputStreamReader(System.in)));
         Messager.message("Command handler ready..");
 
-        /* Client listener */
-        Main._server = new Server();
-        Main._server.startListening();
-
+        /* Setup the messager */
         int sleepTime = Integer.parseInt(Main.config.getValue("sleepTime"));
         Messager.startRedrawing(Integer.parseInt(Main.config.getValue("redrawTime")));
 
+        /* Client listener */
+        Main._server = new Server();
+        Debugger.setLogger((String category, String message) -> {
+            if (_running) {
+                Messager.message("[" + category + "] " + message);
+            }
+            else {
+                Messager.immediateMessage("[" + category + "]" + message);
+            }
+        });
+        Main._server.onMessageReceived(Main.commandHandler::processCommand);
+        Main._server.start();
+
         /* Process commands, etc */
-        while (true) {
+        while (Main._running) {
             try {
                 Main.commandHandler.read(); //if there are commands then these are blocking, this is so we don't overflow the pi's memory doing multiple searches async
-                Main._server.checkWaitingClients();
-                Main._server.processAllCommands(Main.commandHandler);
                 Thread.sleep(sleepTime); //to stop it redrawing so much
             }
             catch (ArgumentNotFoundException e) {
@@ -112,6 +122,8 @@ public final class Main
                 Messager.error("Command reading error: ", e);
             }
         }
+
+        Messager.immediateMessage("Main stopped listening for commands");
     }
 
     private static void _exportLibs() throws IOException {
@@ -139,17 +151,11 @@ public final class Main
 
                 FileOutputStream exportStream = new FileOutputStream(exportFile);
 
-                try {
-                    byte[] resourceBuffer = new byte[1024];
-                    int resourceBytes;
+                byte[] resourceBuffer = new byte[1024];
+                int resourceBytes;
 
-                    while ((resourceBytes = resourceStream.read(resourceBuffer)) != -1) {
-                        exportStream.write(resourceBuffer, 0, resourceBytes);
-                    }
-                }
-                finally {
-                    resourceStream.close();
-                    exportStream.close();
+                while ((resourceBytes = resourceStream.read(resourceBuffer)) != -1) {
+                    exportStream.write(resourceBuffer, 0, resourceBytes);
                 }
             }
         }
@@ -183,6 +189,14 @@ public final class Main
             public void run() {
                 Messager.immediateMessage("Shutting down..");
 
+                try {
+                    Main._running = false;
+                    Thread.sleep(Integer.parseInt(Main.config.getValue("sleepTime"))); //wait until main has stopped
+                }
+                catch (Exception e) {
+                    Messager.error("Failed to shutdown main", e);
+                }
+
                 /* Update config to save changes to files */
                 try {
                     Messager.immediateMessage("Saving config");
@@ -203,7 +217,7 @@ public final class Main
 
                 /* Stop the server listener */
                 try {
-                    Main._server.stopListening();
+                    Main._server.stop();
                 }
                 catch (Exception e) {
                     Messager.error("Failed to stop listener server ", e);

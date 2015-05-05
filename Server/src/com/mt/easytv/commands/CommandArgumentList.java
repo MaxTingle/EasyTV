@@ -1,9 +1,29 @@
 package com.mt.easytv.commands;
 
+import com.mt.easytv.interaction.Messager;
+import uk.co.maxtingle.communication.common.Message;
+
 import java.util.ArrayList;
 
 public class CommandArgumentList extends ArrayList<CommandArgument>
 {
+    public static CommandArgumentList fromMessage(Message message) {
+        CommandArgumentList list = new CommandArgumentList();
+
+        try {
+            for (Object param : message.params) {
+                CommandArgument argument = (CommandArgument) param;
+                list.add(argument);
+            }
+        }
+        catch (Exception e) {
+            Messager.immediateMessage("Invalid message params received in message " + message.toString());
+            return null;
+        }
+
+        return list;
+    }
+
     public boolean hasCommand(String argument) {
         for (CommandArgument arg : this) {
             if (argument.equals(arg.argument)) {

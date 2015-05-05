@@ -1,6 +1,6 @@
 package com.mt.easytv.commands;
 
-import com.mt.easytv.connectivity.Client;
+import uk.co.maxtingle.communication.client.Client;
 
 @FunctionalInterface
 /**

@@ -1,10 +1,10 @@
 package com.mt.easytv.commands;
 
-import com.mt.easytv.connectivity.Client;
-import com.mt.easytv.connectivity.ClientMessage;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import uk.co.maxtingle.communication.client.Client;
+import uk.co.maxtingle.communication.common.Message;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -241,9 +241,10 @@ public final class CommandHandler
      * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
      */
-    public Object[] processCommand(ClientMessage clientMessage, Client client) throws Exception {
-        Command command = this._findCommand(clientMessage.request, clientMessage.getCommandArguments(), true);
-        return command.processCommand(clientMessage.getCommandArguments(), client);
+    public Object[] processCommand(Client client, Message clientMessage) throws Exception {
+        CommandArgumentList args = CommandArgumentList.fromMessage(clientMessage);
+        Command command = this._findCommand(clientMessage.request, args, true);
+        return command.processCommand(args, client);
     }
 
     /**

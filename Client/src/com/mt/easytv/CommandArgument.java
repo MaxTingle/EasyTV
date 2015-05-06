@@ -1,6 +1,6 @@
-package com.mt.easytv.connectivity;
+package com.mt.easytv;
 
-public final class CommandArgument
+public class CommandArgument
 {
     public String argument;
     public String value;

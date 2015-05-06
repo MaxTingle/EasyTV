@@ -8,11 +8,11 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
+import com.mt.easytv.CommandArgument;
 import com.mt.easytv.R;
-import com.mt.easytv.connectivity.ClientMessage;
-import com.mt.easytv.connectivity.CommandArgument;
-import com.mt.easytv.connectivity.IReplyListener;
-import com.mt.easytv.connectivity.ServerMessage;
+import uk.co.maxtingle.communication.client.Client;
+import uk.co.maxtingle.communication.common.Message;
+import uk.co.maxtingle.communication.common.events.MessageReceived;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -136,8 +136,8 @@ public class CommandExecutor extends Activity
         popup.show();
     }
 
-    public CommandArgument[] getCommandArguments() {
-        CommandArgument[] args = new CommandArgument[this._arguments.size()];
+    public Object[] getCommandArguments() {
+        Object[] args = new Object[this._arguments.size()];
 
         for (Map<String, String> argument : this._arguments) {
             args[this._arguments.indexOf(argument)] = new CommandArgument(argument.get("Argument"), argument.get("Value"));
@@ -151,15 +151,17 @@ public class CommandExecutor extends Activity
             EditText txtCommand = (EditText) this.findViewById(R.id.txtCommand);
             final Activity self = this;
 
-            new ClientMessage(txtCommand.getText().toString(), this.getCommandArguments())
-                    .onReply(new IReplyListener()
-                    {
-                        @Override
-                        public void onReply(ServerMessage response, ClientMessage original) {
-                            CommandResponse.setResponse(response);
-                            self.setIntent(new Intent(self, CommandResponse.class)); //Need to preserve activity, crappy delegates.
-                        }
-                    });
+            Message message = new Message(txtCommand.getText().toString(), this.getCommandArguments());
+            message.onReply(new MessageReceived()
+            {
+                @Override
+                public void onMessageReceived(Client client, Message message) throws Exception {
+                    CommandResponse.setResponse(message);
+                    self.setIntent(new Intent(self, CommandResponse.class)); //Need to preserve activity, crappy delegates.
+                }
+            });
+
+            MainActivity.client.sendMessage(message);
         }
         catch (Exception e) {
             new AlertDialog.Builder(this)

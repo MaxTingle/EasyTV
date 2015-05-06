@@ -4,13 +4,13 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.widget.EditText;
 import com.mt.easytv.R;
-import com.mt.easytv.connectivity.ServerMessage;
+import uk.co.maxtingle.communication.common.Message;
 
 public class CommandResponse extends Activity
 {
-    private static ServerMessage _response;
+    private static Message _response;
 
-    public static void setResponse(ServerMessage response) {
+    public static void setResponse(Message response) {
         CommandResponse._response = response;
     }
 
@@ -31,14 +31,14 @@ public class CommandResponse extends Activity
             return;
         }
 
-        if (CommandResponse._response.response == null) {
+        if (CommandResponse._response.request == null) {
             txtResponseMessage.setText("Null message");
         }
         else {
-            txtResponseMessage.setText(CommandResponse._response.response);
+            txtResponseMessage.setText(CommandResponse._response.request);
         }
 
-        if (CommandResponse._response.responseData == null) {
+        if (CommandResponse._response.params == null) {
             txtResponseData.setText("");
         }
         else {

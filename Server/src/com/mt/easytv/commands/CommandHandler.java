@@ -241,10 +241,22 @@ public final class CommandHandler
      * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
      */
-    public Object[] processCommand(Client client, Message clientMessage) throws Exception {
+    public void processCommand(Client client, Message clientMessage) throws Exception {
         CommandArgumentList args = CommandArgumentList.fromMessage(clientMessage);
-        Command command = this._findCommand(clientMessage.request, args, true);
-        return command.processCommand(args, client);
+
+        if (args == null) {
+            clientMessage.respond(new Message(false, "Invalid arguments"));
+        }
+        else {
+            Command command = this._findCommand(clientMessage.request, args, true);
+
+            try {
+                clientMessage.respond(new Message(true, command.processCommand(args, client)));
+            }
+            catch (Exception e) {
+                clientMessage.respond(new Message(false, e.getMessage()));
+            }
+        }
     }
 
     /**

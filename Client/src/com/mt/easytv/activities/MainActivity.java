@@ -8,16 +8,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 import com.mt.easytv.R;
 import com.mt.easytv.config.Config;
-import com.mt.easytv.connectivity.Client;
+import uk.co.maxtingle.communication.client.Client;
+
+import java.net.Socket;
 
 public class MainActivity extends Activity
 {
+    public static Client client;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.main);
-        this._setDefaultConfig();
-        this._initClient();
+        this._initialInit();
     }
 
     @Override
@@ -40,9 +43,18 @@ public class MainActivity extends Activity
         }
     }
 
+    private void _initialInit() {
+        if (MainActivity.client != null) {
+            return;
+        }
+
+        this._setDefaultConfig();
+        this._initClient();
+    }
+
     private void _initClient() {
         try {
-            Client.startup();
+            MainActivity.client = new Client(new Socket(Config.getValue("address"), Integer.parseInt(Config.getValue("port"))));
         }
         catch (Exception e) {
             new AlertDialog.Builder(this)
@@ -53,9 +65,9 @@ public class MainActivity extends Activity
     }
 
     private void _setDefaultConfig() {
-        Config.addDefault("defaultLog", "");
+        Config.addDefault("defaultLog", "--EASYTV CLIENT LOG--\n\n\n");
         Config.addDefault("port", "8080");
-        Config.addDefault("restrictIp", "localhost"); //TODO: Change to null upon publish
+        Config.addDefault("address", "localhost");
         Config.addDefault("connectionTimeout", 500);
     }
 }

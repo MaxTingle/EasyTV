@@ -17,6 +17,7 @@ SERVER:
 
 CLIENT:
     - MainActivity GUI
+    - Make command response display the result data
 
 NOTEPAD:
 search -search "batman the dark knight" -searchIn piratebaylocal -sortBy seeders -view -progress

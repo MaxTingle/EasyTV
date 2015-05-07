@@ -2,6 +2,7 @@ package com.mt.easytv.activities;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -15,6 +16,7 @@ import java.net.Socket;
 public class MainActivity extends Activity
 {
     public static Client client;
+    private static Thread _clientThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,21 +55,42 @@ public class MainActivity extends Activity
     }
 
     private void _initClient() {
-        try {
-            MainActivity.client = new Client(new Socket(Config.getValue("address"), Integer.parseInt(Config.getValue("port"))));
-        }
-        catch (Exception e) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Error connecting to server")
-                    .setMessage(e.getMessage())
-                    .show();
-        }
+        MainActivity._clientThread = new Thread(new Runnable()
+        {
+            @Override
+            public void run() {
+                try {
+                    MainActivity.client = new Client(new Socket(Config.getValue("address"), Integer.parseInt(Config.getValue("port"))));
+                    MainActivity.client.listenForReplies();
+                }
+                catch (final Exception e) {
+                    MainActivity.this.runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run() {
+                            new AlertDialog.Builder(MainActivity.this)
+                                    .setTitle("Error connecting to server")
+                                    .setMessage(e.getMessage())
+                                    .setOnDismissListener(new DialogInterface.OnDismissListener()
+                                    {
+                                        @Override
+                                        public void onDismiss(DialogInterface dialog) {
+                                            MainActivity.this.finish();
+                                        }
+                                    }).show();
+                        }
+                    });
+                }
+            }
+        });
+        MainActivity._clientThread.start();
     }
 
     private void _setDefaultConfig() {
         Config.addDefault("defaultLog", "--EASYTV CLIENT LOG--\n\n\n");
         Config.addDefault("port", "8080");
-        Config.addDefault("address", "localhost");
+        Config.addDefault("address", "192.168.1.110");
         Config.addDefault("connectionTimeout", 500);
+        Config.load();
     }
 }

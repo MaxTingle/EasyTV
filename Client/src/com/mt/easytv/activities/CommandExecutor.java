@@ -147,28 +147,39 @@ public class CommandExecutor extends Activity
     }
 
     public void executeCommand() {
-        try {
-            EditText txtCommand = (EditText) this.findViewById(R.id.txtCommand);
-            final Activity self = this;
+        final String command = ((EditText) this.findViewById(R.id.txtCommand)).getText().toString();
 
-            Message message = new Message(txtCommand.getText().toString(), this.getCommandArguments());
-            message.onReply(new MessageReceived()
-            {
-                @Override
-                public void onMessageReceived(Client client, Message message) throws Exception {
-                    CommandResponse.setResponse(message);
-                    self.setIntent(new Intent(self, CommandResponse.class)); //Need to preserve activity, crappy delegates.
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run() {
+                try {
+                    Message message = new Message(command, CommandExecutor.this.getCommandArguments());
+                    message.onReply(new MessageReceived()
+                    {
+                        @Override
+                        public void onMessageReceived(Client client, Message message) throws Exception {
+                            CommandResponse.setResponse(message);
+                            CommandExecutor.this.setIntent(new Intent(CommandExecutor.this, CommandResponse.class)); //Need to preserve activity, crappy delegates.
+                        }
+                    });
+
+                    MainActivity.client.sendMessage(message);
                 }
-            });
-
-            MainActivity.client.sendMessage(message);
-        }
-        catch (Exception e) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Error sending command")
-                    .setMessage(e.getMessage())
-                    .show();
-        }
+                catch (final Exception e) {
+                    CommandExecutor.this.runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run() {
+                            new AlertDialog.Builder(CommandExecutor.this)
+                                    .setTitle("Error sending command")
+                                    .setMessage(e.getMessage())
+                                    .show();
+                        }
+                    });
+                }
+            }
+        }).start();
     }
 
     private void _initList() {

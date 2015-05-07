@@ -7,10 +7,11 @@ SERVER:
         - Add piratebaylocal search factory and multi thread the searching
         - kickasstorrents searching
         - piratebay site searching
-        - TorrentManager loading torrents from a previous shutdown, not sure if Session state does this, look into it using the sync manager on bootup
 
     FIXES:
         - Messager redraw ugly in an IDE embedded terminal
+        - Messager stops drawing new lines after X refreshes
+
 
     TESTS:
         - Using finished thing directly from jar

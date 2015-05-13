@@ -3,6 +3,7 @@ SERVER:
 
     IMPLEMENTATIONS:
         - Server sending updates to all clients when a torrent session update is pushed. Server sending updates to all clients when vlcj has event
+        - Add score
         - Server displaying all downloading status on the jframe
         - Add piratebaylocal search factory and multi thread the searching
         - kickasstorrents searching
@@ -11,10 +12,6 @@ SERVER:
     FIXES:
         - Messager redraw ugly in an IDE embedded terminal
         - Messager stops drawing new lines after X refreshes
-
-
-    TESTS:
-        - Using finished thing directly from jar
 
 CLIENT:
     - MainActivity GUI

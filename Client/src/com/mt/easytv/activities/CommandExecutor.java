@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.*;
 import com.mt.easytv.CommandArgument;
 import com.mt.easytv.R;
-import uk.co.maxtingle.communication.client.Client;
+import uk.co.maxtingle.communication.common.BaseClient;
 import uk.co.maxtingle.communication.common.Message;
 import uk.co.maxtingle.communication.common.events.MessageReceived;
 
@@ -72,8 +72,9 @@ public class CommandExecutor extends Activity
                         Map<String, String> argument = new HashMap<>();
                         argument.put("Argument", txtName.getText().toString());
                         argument.put("Value", "");
-                        _arguments.add(argument);
-                        _argumentsAdapter.notifyDataSetChanged();
+                        CommandExecutor.this._arguments.add(argument);
+                        CommandExecutor.this._argumentsAdapter.notifyDataSetChanged();
+                        CommandExecutor.this.showEditItem(CommandExecutor.this._arguments.indexOf(argument));
                     }
                 })
                 .setNegativeButton("Cancel", null)
@@ -158,9 +159,15 @@ public class CommandExecutor extends Activity
                     message.onReply(new MessageReceived()
                     {
                         @Override
-                        public void onMessageReceived(Client client, Message message) throws Exception {
-                            CommandResponse.setResponse(message);
-                            CommandExecutor.this.setIntent(new Intent(CommandExecutor.this, CommandResponse.class)); //Need to preserve activity, crappy delegates.
+                        public void onMessageReceived(BaseClient client, final Message message) throws Exception {
+                            CommandExecutor.this.runOnUiThread(new Runnable()
+                            {
+                                @Override
+                                public void run() {
+                                    CommandResponse.setResponse(message);
+                                    CommandExecutor.this.startActivity(new Intent(CommandExecutor.this, CommandResponse.class));
+                                }
+                            });
                         }
                     });
 

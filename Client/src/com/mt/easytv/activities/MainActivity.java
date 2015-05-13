@@ -10,6 +10,8 @@ import android.view.MenuItem;
 import com.mt.easytv.R;
 import com.mt.easytv.config.Config;
 import uk.co.maxtingle.communication.client.Client;
+import uk.co.maxtingle.communication.debug.Debugger;
+import uk.co.maxtingle.communication.debug.EventLogger;
 
 import java.net.Socket;
 
@@ -50,18 +52,28 @@ public class MainActivity extends Activity
             return;
         }
 
-        this._setDefaultConfig();
-        this._initClient();
-    }
+        /* Setup config */
+        Config.addDefault("port", "8080");
+        Config.addDefault("address", "192.168.1.113");
+        Config.addDefault("connectionTimeout", 500);
+        Config.load();
 
-    private void _initClient() {
+        /* Setup debugger */
+        Debugger.setLogger(new EventLogger()
+        {
+            @Override
+            public void log(String category, String message) {
+                DebugManager.log("[" + category + "] " + message);
+            }
+        });
+
+        /* Start client */
         MainActivity._clientThread = new Thread(new Runnable()
         {
             @Override
             public void run() {
                 try {
                     MainActivity.client = new Client(new Socket(Config.getValue("address"), Integer.parseInt(Config.getValue("port"))));
-                    MainActivity.client.listenForReplies();
                 }
                 catch (final Exception e) {
                     MainActivity.this.runOnUiThread(new Runnable()
@@ -84,13 +96,5 @@ public class MainActivity extends Activity
             }
         });
         MainActivity._clientThread.start();
-    }
-
-    private void _setDefaultConfig() {
-        Config.addDefault("defaultLog", "--EASYTV CLIENT LOG--\n\n\n");
-        Config.addDefault("port", "8080");
-        Config.addDefault("address", "192.168.1.110");
-        Config.addDefault("connectionTimeout", 500);
-        Config.load();
     }
 }

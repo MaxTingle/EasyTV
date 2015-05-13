@@ -11,6 +11,10 @@ public class CommandArgumentList extends ArrayList<CommandArgument>
         CommandArgumentList list = new CommandArgumentList();
 
         try {
+            if (message.params == null) {
+                return list;
+            }
+
             for (Object param : message.params) {
                 CommandArgument argument = (CommandArgument) param;
                 list.add(argument);

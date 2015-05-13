@@ -6,9 +6,64 @@
     android:weightSum="1">
 
     <TextView
-        android:id="@+id/txtDebugLog"
+        android:id="@+id/textView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:layout_height="wrap_content"
+        android:linksClickable="false"
+        android:singleLine="true"
+        android:text="Connection Info"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+        android:textColor="@android:color/holo_blue_light" />
+
+    <TextView
+        android:id="@+id/lblConnectionIP"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="2dp"
+        android:linksClickable="false"
+        android:singleLine="true"
+        android:text="Server IP Address"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+        android:textColor="@android:color/holo_blue_light" />
+
+    <TextView
+        android:id="@+id/lblConectionPort"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="2dp"
+        android:linksClickable="false"
+        android:singleLine="true"
+        android:text="Server Port"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+        android:textColor="@android:color/holo_blue_light" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.36" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:linksClickable="false"
+        android:singleLine="true"
+        android:text="Debug Log"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+        android:textColor="@android:color/holo_blue_light" />
+
+    <TextView
+        android:id="@+id/lblDebugLog"
+        android:layout_width="match_parent"
+        android:layout_height="430dp"
+        android:layout_marginBottom="80dp"
+        android:autoText="false"
+        android:maxLines="1000"
+        android:nestedScrollingEnabled="false"
+        android:scrollbars="vertical"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small" />
 
 </LinearLayout>

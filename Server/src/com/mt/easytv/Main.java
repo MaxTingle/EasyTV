@@ -18,7 +18,7 @@ import uk.co.caprica.vlcj.player.embedded.windows.Win32FullScreenStrategy;
 import uk.co.caprica.vlcj.player.embedded.x.XFullScreenStrategy;
 import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import uk.co.caprica.vlcj.version.LibVlcVersion;
-import uk.co.maxtingle.communication.Debugger;
+import uk.co.maxtingle.communication.debug.Debugger;
 import uk.co.maxtingle.communication.server.Server;
 
 import javax.swing.*;
@@ -94,7 +94,6 @@ public final class Main
         Messager.startRedrawing(Integer.parseInt(Main.config.getValue("redrawTime")));
 
         /* Client listener */
-        Main._server = new Server();
         Debugger.setLogger((String category, String message) -> {
             if (_running) {
                 Messager.message("[" + category + "] " + message);
@@ -103,8 +102,16 @@ public final class Main
                 Messager.immediateMessage("[" + category + "]" + message);
             }
         });
+        Main._server = new Server();
         Main._server.onMessageReceived(Main.commandHandler::processCommand);
-        Main._server.start();
+
+        try {
+            Main._server.start();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
 
         /* Process commands, etc */
         while (Main._running) {

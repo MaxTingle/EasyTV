@@ -1,6 +1,6 @@
 package com.mt.easytv.commands;
 
-import uk.co.maxtingle.communication.client.Client;
+import uk.co.maxtingle.communication.server.ServerClient;
 
 @FunctionalInterface
 /**
@@ -15,8 +15,9 @@ public interface IClientCommand
      * Executes a command coming from an authenticated client
      *
      * @param args The array of arguments the client passed
+     * @param client
      * @return The result that might normally be printed to screen, so it can be added to a
      * message and passed back to the client
      */
-    Object[] processCommand(CommandArgumentList args, Client client) throws Exception;
+    Object[] processCommand(CommandArgumentList args, ServerClient client) throws Exception;
 }

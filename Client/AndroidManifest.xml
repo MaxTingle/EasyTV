@@ -18,5 +18,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.CommandExecutor" />
+        <activity android:name=".activities.DebugManager" />
+        <activity android:name=".activities.CommandResponse" />
     </application>
 </manifest>

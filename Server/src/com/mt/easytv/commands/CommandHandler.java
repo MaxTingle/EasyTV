@@ -3,8 +3,9 @@ package com.mt.easytv.commands;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-import uk.co.maxtingle.communication.client.Client;
+import uk.co.maxtingle.communication.common.BaseClient;
 import uk.co.maxtingle.communication.common.Message;
+import uk.co.maxtingle.communication.server.ServerClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -153,7 +154,7 @@ public final class CommandHandler
             }
 
             @Override
-            public Object[] processCommand(CommandArgumentList args, Client client) throws Exception {
+            public Object[] processCommand(CommandArgumentList args, ServerClient client) throws Exception {
                 if (clientAction == null) {
                     throw new NotImplementedException();
                 }
@@ -241,7 +242,7 @@ public final class CommandHandler
      * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
      */
-    public void processCommand(Client client, Message clientMessage) throws Exception {
+    public void processCommand(BaseClient client, Message clientMessage) throws Exception {
         CommandArgumentList args = CommandArgumentList.fromMessage(clientMessage);
 
         if (args == null) {
@@ -251,7 +252,7 @@ public final class CommandHandler
             Command command = this._findCommand(clientMessage.request, args, true);
 
             try {
-                clientMessage.respond(new Message(true, command.processCommand(args, client)));
+                clientMessage.respond(new Message(true, command.processCommand(args, (ServerClient) client)));
             }
             catch (Exception e) {
                 clientMessage.respond(new Message(false, e.getMessage()));

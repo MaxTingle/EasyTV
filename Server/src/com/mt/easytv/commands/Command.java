@@ -1,7 +1,7 @@
 package com.mt.easytv.commands;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-import uk.co.maxtingle.communication.client.Client;
+import uk.co.maxtingle.communication.server.ServerClient;
 
 public class Command implements ICommand, IClientCommand
 {
@@ -26,7 +26,7 @@ public class Command implements ICommand, IClientCommand
         throw new NotImplementedException();
     }
 
-    public Object[] processCommand(CommandArgumentList args, Client client) throws Exception {
+    public Object[] processCommand(CommandArgumentList args, ServerClient client) throws Exception {
         throw new NotImplementedException();
     }
 }

@@ -4,11 +4,13 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
 import com.mt.easytv.R;
-import com.mt.easytv.config.Config;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 public class DebugManager extends Activity
 {
-    private static String _log = Config.getValue("defaultLog");
+    private static String _log = "";
 
     public static void log(String message) {
         DebugManager._log += message + "\n\n";
@@ -35,7 +37,25 @@ public class DebugManager extends Activity
     protected void onStart() {
         super.onStart();
 
-        TextView txtDebugLog = (TextView) this.findViewById(R.id.txtDebugLog);
-        txtDebugLog.setText(DebugManager._log);
+        ((TextView) this.findViewById(R.id.lblDebugLog)).setText(DebugManager._log);
+
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run() {
+                InetAddress hostAddress = MainActivity.client.getSocket().getInetAddress();
+                final String host = hostAddress.getHostAddress() + " ( " + hostAddress.getCanonicalHostName() + " )";
+                final int port = ((InetSocketAddress) MainActivity.client.getSocket().getLocalSocketAddress()).getPort();
+
+                DebugManager.this.runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run() {
+                        ((TextView) DebugManager.this.findViewById(R.id.lblConnectionIP)).setText("Server IP Address: " + host);
+                        ((TextView) DebugManager.this.findViewById(R.id.lblConnectionIP)).setText("Server Port: " + port);
+                    }
+                });
+            }
+        }).start();
     }
 }

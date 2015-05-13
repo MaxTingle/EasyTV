@@ -12,14 +12,14 @@ public final class TorrentManager
     private ArrayList<Torrent> _torrents        = new ArrayList<>();
     private int                _paginationIndex = 0;
 
-    public static enum SortMode
+    public enum SortMode
     {
         SEEDERS,
         LEECHERS,
         SIZE
     }
 
-    public static enum SortDirection
+    public enum SortDirection
     {
         ASC,
         DESC

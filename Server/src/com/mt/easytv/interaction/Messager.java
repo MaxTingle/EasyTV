@@ -1,25 +1,13 @@
 package com.mt.easytv.interaction;
 
-import com.sun.istack.internal.Nullable;
-import uk.co.maxtingle.communication.common.Message;
-
 import java.util.ArrayList;
 
 public final class Messager
 {
-    private static Message _message; //attaching of client is done so single point of communication for cli and server
     private static String _outputBuffer = "";
     private static ArrayList<PersistentMessage> _persistentMessages = new ArrayList<>();
     private static Thread _redrawThread;
     private static boolean _autoRedrawing = false;
-
-    public static void attachMessage(Message message) {
-        Messager._message = message;
-    }
-
-    public static void detachMessage() {
-        Messager._message = null;
-    }
 
     public static void immediateMessage(String msg) {
         System.out.println(msg);
@@ -27,18 +15,7 @@ public final class Messager
     }
 
     public static void message(String msg) {
-        Messager.message(msg, null);
-    }
-
-    public static void message(String msg, @Nullable Object[] data) {
-        if (Messager._message != null) {
-            Messager._message.success = true;
-            Messager._message.request = msg;
-            Messager._message.params = data;
-        }
-        else {
-            Messager.addBufferLine(msg);
-        }
+        Messager.addBufferLine(msg);
     }
 
     public static void error(String prefix, Exception e) {
@@ -48,14 +25,7 @@ public final class Messager
             message += "\nin " + stack.getFileName() + " " + stack.getClassName() + "." + stack.getMethodName() + " on line " + stack.getLineNumber();
         }
 
-        if (Messager._message != null) {
-            Messager._message.success = false;
-            Messager._message.request = message;
-            Messager._message.params = new Object[]{e};
-        }
-        else {
-            Messager.message(message);
-        }
+        Messager.message(message);
     }
 
     public static void addBufferLine(String line) {

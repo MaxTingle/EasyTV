@@ -18,7 +18,7 @@ public final class CommandArgument implements Cloneable
      * including dashes and spaces. Surround with double quotes
      * to use dashes or spaces.
      */
-    public String value;
+    public Object value;
 
     /**
      * Dummy constructor to allow no argument construction
@@ -29,7 +29,7 @@ public final class CommandArgument implements Cloneable
     /**
      * Sets the class variables argument and value respectively
      */
-    public CommandArgument(String argument, String value) {
+    public CommandArgument(String argument, Object value) {
         this.argument = argument;
         this.value = value;
     }

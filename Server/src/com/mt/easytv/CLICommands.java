@@ -14,6 +14,7 @@ public class CLICommands
 {
     /**
      * Displays all the config item values
+     *
      * required:
      * __itemName__     **No key, should just the key of the config item
      */
@@ -24,7 +25,7 @@ public class CLICommands
         }
 
         for (CommandArgument arg : args) {
-            String value = Main.config.getValue(arg.value);
+            String value = Main.config.getValue((String) arg.value);
 
             if (value == null) {
                 Messager.message("Config item " + arg.value + " does not exist.");
@@ -37,6 +38,7 @@ public class CLICommands
 
     /**
      * Sets item values in the config, specify as many config items as you want
+     *
      * required:
      * -__configItem__     **Key should be the name of the config item, value the value to set it to
      */
@@ -75,9 +77,11 @@ public class CLICommands
 
     /**
      * Torrent searching / loading
+     *
      * required:
      * -search   "search terms"                     **The keywords to search for
      * -searchIn [piratebay,piratebaylocal,kickass] **The sources of torrents to look in
+     *
      * optional:
      * -view     **Displays n torrents. May pass the number to view or none in which case will use default
      * -progress **Shows progress as loading
@@ -119,6 +123,7 @@ public class CLICommands
 
     /**
      * Outputs a certain amount of the torrent's detail
+     *
      * optional:
      * -size    **Specifies the number of torrents to load
      * -reset   **Resets the current index to 0
@@ -143,6 +148,7 @@ public class CLICommands
 
     /**
      * Sorts the torrent manager torrents by a user specified variable
+     *
      * -sortBy    **What to sort by [seeders,leechers,size]
      * -sortDir   **What direction to sort [asc,desc]
      */
@@ -167,6 +173,7 @@ public class CLICommands
 
     /**
      * Outputs a single torrent's detail
+     *
      * -id     **The ID of the torrent to view
      * -sticky **Whether or not to stick the torrent view
      * -unsticky **Whether or not to unstick the torrent view
@@ -215,6 +222,7 @@ public class CLICommands
 
     /**
      * Deletes a torrent's data
+     *
      * -id    **The ID of the torrent to delete
      */
     public static void delete(CommandArgumentList args) throws Exception {
@@ -238,6 +246,7 @@ public class CLICommands
 
     /**
      * Stops a torrent downloading
+     *
      * -id    **The ID of the torrent to delete
      */
     public static void stopDownload(CommandArgumentList args) throws Exception {
@@ -261,6 +270,7 @@ public class CLICommands
 
     /**
      * Plays a torrent file using vlc
+     *
      * -id    **The ID of the torrent to delete
      * -file  **The file to play if there are multiple
      */
@@ -285,6 +295,7 @@ public class CLICommands
 
     /**
      * Starts a torrent download
+     *
      * -id      **The ID of the torrent to download
      * -force   **Whether or not to force redownload
      */

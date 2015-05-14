@@ -2,15 +2,13 @@ package com.mt.easytv.torrents;
 
 import com.mt.easytv.torrents.sources.*;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Random;
+import java.util.*;
 
 public final class TorrentManager
 {
-    private ArrayList<Torrent> _torrents        = new ArrayList<>();
-    private int                _paginationIndex = 0;
+    private static HashMap<String, ArrayList<Torrent>> _previousSearches = new HashMap<>();
+    private        ArrayList<Torrent>                  _torrents         = new ArrayList<>();
+    private        int                                 _paginationIndex  = 0;
 
     public enum SortMode
     {
@@ -45,12 +43,17 @@ public final class TorrentManager
      * @throws TorrentSourceNotFound An invalid torrent source in the searchIn array
      */
     public static ArrayList<Torrent> search(String searchTerms, String[] searchIn, boolean showProgress) throws Exception {
+        if (TorrentManager._previousSearches.containsKey(searchTerms)) {
+            return TorrentManager._previousSearches.get(searchTerms);
+        }
+
         ArrayList<Torrent> torrents = new ArrayList<>();
 
         for (String sourceName : searchIn) {
             torrents.addAll(TorrentManager._siteShortToSite(sourceName).search(searchTerms, showProgress));
         }
 
+        TorrentManager._previousSearches.put(searchTerms, torrents);
         return torrents;
     }
 

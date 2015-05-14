@@ -296,10 +296,10 @@ public final class Main
 
         /* Server */
         Main.config.addDefault("port", "8080");
-        Main.config.addDefault("username", "test");
-        Main.config.addDefault("password", "test");
-        Main.config.addDefault("serverMagic", "fYrEUrl4z0r");
-        Main.config.addDefault("clientMagic", "alLIlLlR1ightYth4n");
+//        Main.config.addDefault("username", "test");
+//        Main.config.addDefault("password", "test");
+//        Main.config.addDefault("serverMagic", "fYrEUrl4z0r");
+//        Main.config.addDefault("clientMagic", "alLIlLlR1ightYth4n");
 
         /* Storage */
         Main.config.addDefault("storage", "storage");
@@ -341,6 +341,7 @@ public final class Main
     }
 
     private static void _addCommands() {
+        /* CLI commands */
         Main.commandHandler.addCommand("clear", CLICommands::clear);
         Main.commandHandler.addCommand("quit", CLICommands::quit);
         Main.commandHandler.addCommand("getConfig", CLICommands::getConfig);
@@ -354,6 +355,9 @@ public final class Main
         Main.commandHandler.addCommand("play", CLICommands::play);
         Main.commandHandler.addCommand("delete", CLICommands::delete);
         Main.commandHandler.addCommand("unstickAll", CLICommands::unstickAll);
+
+        /* Client commands */
+        Main.commandHandler.addCommand("getCommands", ClientCommands::getCommands);
     }
 
     private static void _processExecCommands(String[] args) throws Exception {

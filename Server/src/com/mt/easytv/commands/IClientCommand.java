@@ -15,7 +15,7 @@ public interface IClientCommand
      * Executes a command coming from an authenticated client
      *
      * @param args The array of arguments the client passed
-     * @param client
+     * @param client The server client that made the request
      * @return The result that might normally be printed to screen, so it can be added to a
      * message and passed back to the client
      */

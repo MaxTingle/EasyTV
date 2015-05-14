@@ -6,7 +6,7 @@
     android:weightSum="1">
 
     <TextView
-        android:id="@+id/lblResponse"
+        android:id="@+id/lblResponseHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
@@ -16,23 +16,22 @@
         android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
         android:textColor="@android:color/holo_blue_light" />
 
-    <EditText
-        android:id="@+id/txtResponseMessage"
+    <TextView
+        android:id="@+id/lblResponseMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="0.21"
-        android:ems="10"
-        android:inputType="textMultiLine" />
+        android:layout_weight="0.12"
+        android:ems="10" />
 
     <Space
         android:id="@+id/spaceResponseData"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="0.12"
+        android:layout_weight="0.06"
         android:text="Arguments" />
 
     <TextView
-        android:id="@+id/lblResponseData"
+        android:id="@+id/lblResponseDataHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
@@ -42,13 +41,14 @@
         android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
         android:textColor="@android:color/holo_blue_light" />
 
-    <EditText
-        android:id="@+id/txtResponseData"
+    <TextView
+        android:id="@+id/lblResponseData"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_weight="0.65"
+        android:layout_weight="0.80"
         android:ems="10"
-        android:inputType="textMultiLine" />
+        android:maxLines="1000"
+        android:scrollbars="vertical" />
 
 </LinearLayout>

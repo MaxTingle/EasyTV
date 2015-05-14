@@ -29,6 +29,18 @@ public final class CommandHandler
     }
 
     /**
+     * Gets an array of the added commands
+     *
+     * @param source The source to get the commands for or null for any
+     * @return The commands
+     */
+    public String[] getCommands(@Nullable final CommandSource source) {
+        return this._commands.stream().filter(command -> command.source == source || source == null)
+                             .map(command -> command.command)
+                             .toArray(String[]::new);
+    }
+
+    /**
      * Adds the command to the list of registered and
      * processable commands.
      *

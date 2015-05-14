@@ -4,9 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
 import com.mt.easytv.R;
+import com.mt.easytv.config.Config;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 
 public class DebugManager extends Activity
 {
@@ -45,14 +45,13 @@ public class DebugManager extends Activity
             public void run() {
                 InetAddress hostAddress = MainActivity.client.getSocket().getInetAddress();
                 final String host = hostAddress.getHostAddress() + " ( " + hostAddress.getCanonicalHostName() + " )";
-                final int port = ((InetSocketAddress) MainActivity.client.getSocket().getLocalSocketAddress()).getPort();
 
                 DebugManager.this.runOnUiThread(new Runnable()
                 {
                     @Override
                     public void run() {
                         ((TextView) DebugManager.this.findViewById(R.id.lblConnectionIP)).setText("Server IP Address: " + host);
-                        ((TextView) DebugManager.this.findViewById(R.id.lblConnectionIP)).setText("Server Port: " + port);
+                        ((TextView) DebugManager.this.findViewById(R.id.lblConnectionPort)).setText("Server Port: " + Config.getValue("port"));
                     }
                 });
             }

@@ -2,7 +2,7 @@ package com.mt.easytv.activities;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.widget.EditText;
+import android.widget.TextView;
 import com.mt.easytv.R;
 import uk.co.maxtingle.communication.common.Message;
 
@@ -22,8 +22,8 @@ public class CommandResponse extends Activity
     }
 
     private void _displayResponse() {
-        EditText txtResponseMessage = (EditText) this.findViewById(R.id.txtResponseMessage);
-        EditText txtResponseData = (EditText) this.findViewById(R.id.txtResponseData);
+        TextView txtResponseMessage = (TextView) this.findViewById(R.id.lblResponseMessage);
+        TextView txtResponseData = (TextView) this.findViewById(R.id.lblResponseData);
 
         if (CommandResponse._response == null) {
             txtResponseMessage.setText("Null response");
@@ -42,7 +42,27 @@ public class CommandResponse extends Activity
             txtResponseData.setText("");
         }
         else {
-            txtResponseData.setText("there is data"); //TODO: make this display xml encoded data
+            String objectDescription = "";
+
+            for (Object object : CommandResponse._response.params) {
+                objectDescription += object.toString() + "\n";
+
+                /*Field[] attributes =  object.getClass().getDeclaredFields();
+                for(Field field : attributes) {
+                    String value;
+
+                    try {
+                        value = field.get(object).toString();
+                    }
+                    catch(IllegalAccessException e) {
+                        value = "FAILED_READING: " + e.getMessage();
+                    }
+
+                    objectDescription += "  (" + field.getType().getSimpleName() + ") " + field.getName() + ": " + value;
+                }*/
+            }
+
+            txtResponseData.setText(objectDescription);
         }
     }
 }

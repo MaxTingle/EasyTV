@@ -32,30 +32,77 @@ public class CommandExecutor extends Activity
     }
 
     public void showCommandList() {
-        ListView listCommands = new ListView(this);
-        final ArrayList<String> commands = new ArrayList<>(); //TODO: make this get the actual possible commands
+        final ListView listCommands = new ListView(CommandExecutor.this);
 
-        /* Fake commands */
-        commands.add("test");
-
-        /* Adapter and dialog */
-        listCommands.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, commands));
-
-        final AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Select exposed command")
-                .setView(listCommands)
-                .setNegativeButton("Cancel", null)
-                .show();
-
-        listCommands.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        new Thread(new Runnable()
         {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                EditText txtCommand = (EditText) findViewById(R.id.txtCommand);
-                txtCommand.setText(commands.get(position));
-                dialog.cancel();
+            public void run() {
+                try {
+                    Message message = new Message("getCommands");
+                    message.onReply(new MessageReceived()
+                    {
+                        @Override
+                        public void onMessageReceived(BaseClient baseClient, final Message message) throws Exception {
+                            /* Adapter and dialog */
+                            CommandExecutor.this.runOnUiThread(new Runnable()
+                            {
+                                @Override
+                                public void run() {
+                                    if (!message.success) {
+                                        new AlertDialog.Builder(CommandExecutor.this)
+                                                .setTitle("Select command to use")
+                                                .setMessage(message.request)
+                                                .show();
+                                        return;
+                                    }
+
+                                    final ArrayList<String> commands = new ArrayList<>();
+
+                                    if (message.params != null) {
+                                        for (Object command : message.params) {
+                                            commands.add((String) command);
+                                        }
+                                    }
+
+                                    listCommands.setAdapter(new ArrayAdapter<>(CommandExecutor.this, android.R.layout.simple_list_item_1, commands));
+
+                                    final AlertDialog dialog = new AlertDialog.Builder(CommandExecutor.this)
+                                            .setTitle("Select command to use")
+                                            .setView(listCommands)
+                                            .setNegativeButton("Cancel", null)
+                                            .show();
+
+                                    listCommands.setOnItemClickListener(new AdapterView.OnItemClickListener()
+                                    {
+                                        @Override
+                                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                            EditText txtCommand = (EditText) findViewById(R.id.txtCommand);
+                                            txtCommand.setText(commands.get(position));
+                                            dialog.cancel();
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    MainActivity.client.sendMessage(message);
+                }
+                catch (final Exception e) {
+                    CommandExecutor.this.runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run() {
+                            new AlertDialog.Builder(CommandExecutor.this)
+                                    .setTitle("Failed to load commands")
+                                    .setMessage(e.getMessage())
+                                    .setNegativeButton("Cancel", null)
+                                    .show();
+                        }
+                    });
+                }
             }
-        });
+        }).start();
     }
 
     public void addArgument() {

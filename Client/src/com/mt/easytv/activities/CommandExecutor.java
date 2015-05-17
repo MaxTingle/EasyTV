@@ -10,9 +10,8 @@ import android.view.View;
 import android.widget.*;
 import com.mt.easytv.CommandArgument;
 import com.mt.easytv.R;
-import uk.co.maxtingle.communication.common.BaseClient;
+import com.mt.easytv.ResponseCallback;
 import uk.co.maxtingle.communication.common.Message;
-import uk.co.maxtingle.communication.common.events.MessageReceived;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,76 +32,35 @@ public class CommandExecutor extends Activity
 
     public void showCommandList() {
         final ListView listCommands = new ListView(CommandExecutor.this);
-
-        new Thread(new Runnable()
+        MainActivity.safeClientRequest(this, new Message("getCommands"), new ResponseCallback()
         {
             @Override
-            public void run() {
-                try {
-                    Message message = new Message("getCommands");
-                    message.onReply(new MessageReceived()
-                    {
-                        @Override
-                        public void onMessageReceived(BaseClient baseClient, final Message message) throws Exception {
-                            /* Adapter and dialog */
-                            CommandExecutor.this.runOnUiThread(new Runnable()
-                            {
-                                @Override
-                                public void run() {
-                                    if (!message.success) {
-                                        new AlertDialog.Builder(CommandExecutor.this)
-                                                .setTitle("Select command to use")
-                                                .setMessage(message.request)
-                                                .show();
-                                        return;
-                                    }
+            public void onResponse(Message reply) throws Exception {
+                final ArrayList<String> commands = new ArrayList<>();
 
-                                    final ArrayList<String> commands = new ArrayList<>();
-
-                                    if (message.params != null) {
-                                        for (Object command : message.params) {
-                                            commands.add((String) command);
-                                        }
-                                    }
-
-                                    listCommands.setAdapter(new ArrayAdapter<>(CommandExecutor.this, android.R.layout.simple_list_item_1, commands));
-
-                                    final AlertDialog dialog = new AlertDialog.Builder(CommandExecutor.this)
-                                            .setTitle("Select command to use")
-                                            .setView(listCommands)
-                                            .setNegativeButton("Cancel", null)
-                                            .show();
-
-                                    listCommands.setOnItemClickListener(new AdapterView.OnItemClickListener()
-                                    {
-                                        @Override
-                                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                            EditText txtCommand = (EditText) findViewById(R.id.txtCommand);
-                                            txtCommand.setText(commands.get(position));
-                                            dialog.cancel();
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                    MainActivity.client.sendMessage(message);
+                for (Object command : reply.params) {
+                    commands.add((String) command);
                 }
-                catch (final Exception e) {
-                    CommandExecutor.this.runOnUiThread(new Runnable()
-                    {
-                        @Override
-                        public void run() {
-                            new AlertDialog.Builder(CommandExecutor.this)
-                                    .setTitle("Failed to load commands")
-                                    .setMessage(e.getMessage())
-                                    .setNegativeButton("Cancel", null)
-                                    .show();
-                        }
-                    });
-                }
+
+                listCommands.setAdapter(new ArrayAdapter<>(CommandExecutor.this, android.R.layout.simple_list_item_1, commands));
+
+                final AlertDialog dialog = new AlertDialog.Builder(CommandExecutor.this)
+                        .setTitle("Select command to use")
+                        .setView(listCommands)
+                        .setNegativeButton("Cancel", null)
+                        .show();
+
+                listCommands.setOnItemClickListener(new AdapterView.OnItemClickListener()
+                {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        EditText txtCommand = (EditText) findViewById(R.id.txtCommand);
+                        txtCommand.setText(commands.get(position));
+                        dialog.cancel();
+                    }
+                });
             }
-        }).start();
+        });
     }
 
     public void addArgument() {
@@ -197,43 +155,14 @@ public class CommandExecutor extends Activity
     public void executeCommand() {
         final String command = ((EditText) this.findViewById(R.id.txtCommand)).getText().toString();
 
-        new Thread(new Runnable()
+        MainActivity.safeClientRequest(this, new Message(command, CommandExecutor.this.getCommandArguments()), new ResponseCallback()
         {
             @Override
-            public void run() {
-                try {
-                    Message message = new Message(command, CommandExecutor.this.getCommandArguments());
-                    message.onReply(new MessageReceived()
-                    {
-                        @Override
-                        public void onMessageReceived(BaseClient client, final Message message) throws Exception {
-                            CommandExecutor.this.runOnUiThread(new Runnable()
-                            {
-                                @Override
-                                public void run() {
-                                    CommandResponse.setResponse(message);
-                                    CommandExecutor.this.startActivity(new Intent(CommandExecutor.this, CommandResponse.class));
-                                }
-                            });
-                        }
-                    });
-
-                    MainActivity.client.sendMessage(message);
-                }
-                catch (final Exception e) {
-                    CommandExecutor.this.runOnUiThread(new Runnable()
-                    {
-                        @Override
-                        public void run() {
-                            new AlertDialog.Builder(CommandExecutor.this)
-                                    .setTitle("Error sending command")
-                                    .setMessage(e.getMessage())
-                                    .show();
-                        }
-                    });
-                }
+            public void onResponse(Message reply) throws Exception {
+                CommandResponse.setResponse(reply);
+                CommandExecutor.this.startActivity(new Intent(CommandExecutor.this, CommandResponse.class));
             }
-        }).start();
+        });
     }
 
     private void _initList() {

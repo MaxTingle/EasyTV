@@ -349,7 +349,7 @@ public final class CommandHandler
         if (!command.allowNullArgument) {
             for (CommandArgument arg : args) {
                 if (arg.argument == null) {
-                    throw new ArgumentNotFoundException(arg.value, command);
+                    throw new ArgumentNotFoundException(arg.value.toString(), command);
                 }
             }
         }

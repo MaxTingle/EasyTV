@@ -1,5 +1,6 @@
 package com.mt.easytv.commands;
 
+import com.google.gson.internal.LinkedTreeMap;
 import com.mt.easytv.interaction.Messager;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
@@ -24,12 +25,18 @@ public class CommandArgumentList extends ArrayList<CommandArgument>
             }
 
             for (Object param : message.params) {
-                CommandArgument argument = (CommandArgument) param;
-                list.add(argument);
+                if (param instanceof LinkedTreeMap) {
+                    @SuppressWarnings("unchecked") //it is checked...
+                            LinkedTreeMap<String, Object> args = (LinkedTreeMap<String, Object>) param;
+                    list.add(new CommandArgument((String) args.get("argument"), args.get("value")));
+                }
+                else {
+                    list.add((CommandArgument) param);
+                }
             }
         }
         catch (Exception e) {
-            Messager.immediateMessage("Invalid message params received in message " + message.toString());
+            Messager.immediateMessage("Invalid message params received in message " + e.toString());
             return null;
         }
 

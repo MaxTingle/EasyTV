@@ -3,5 +3,62 @@
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
     android:orientation="vertical"
-        >
+    android:weightSum="1">
+
+    <TextView
+        android:id="@+id/lblSearchTerms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:linksClickable="false"
+        android:singleLine="true"
+        android:text="Search Terms"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+        android:textColor="@android:color/holo_blue_light" />
+
+    <EditText
+        android:id="@+id/txtSearchTerms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="1" />
+
+    <TextView
+        android:id="@+id/lblSearchPlaces"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:linksClickable="false"
+        android:singleLine="true"
+        android:text="Search Places"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+        android:textColor="@android:color/holo_blue_light" />
+
+    <CheckBox
+        android:id="@+id/chkPirateBayLocal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="Pirate Bay Local" />
+
+    <CheckBox
+        android:id="@+id/chkPirateBay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:text="Pirate Bay" />
+
+    <CheckBox
+        android:id="@+id/chkKickass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:text="Kickass Torrents" />
+
+    <Button
+        android:id="@+id/btnSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_weight="0.15"
+        android:text="Search" />
+
 </LinearLayout>

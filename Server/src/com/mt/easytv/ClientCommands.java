@@ -8,6 +8,8 @@ import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.torrents.TorrentManager;
 import uk.co.maxtingle.communication.server.ServerClient;
 
+import java.util.ArrayList;
+
 public class ClientCommands
 {
     /**
@@ -28,14 +30,29 @@ public class ClientCommands
         CommandArgument searchIn = args.get("searchIn");
         String searchFor = args.getValue("search");
 
-        if (searchIn == null || !(searchIn.value instanceof String[])) {
+        if (searchIn == null) {
             throw new Exception("Search in must be an array of strings");
         }
         else if (searchFor == null) {
             throw new Exception("Please enter a search term and search area.");
         }
 
-        Messager.message("Searching for " + searchIn + " in " + searchFor);
-        return TorrentManager.search(searchFor, (String[]) searchIn.value).toArray();
+        String[] searchInArr;
+
+        if (searchIn.value instanceof ArrayList) {
+            ArrayList searchInList = (ArrayList) searchIn.value;
+            searchInArr = (String[]) searchInList.toArray(new String[searchInList.size()]);
+        }
+        else {
+            searchInArr = (String[]) searchIn.value;
+        }
+
+        String searchInStr = "";
+        for (String str : searchInArr) {
+            searchInStr += searchInStr.equals("") ? str : ", " + str;
+        }
+
+        Messager.message("Searching for " + searchFor + " in " + searchInStr);
+        return TorrentManager.search(searchFor, searchInArr).toArray();
     }
 }

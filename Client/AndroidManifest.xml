@@ -20,5 +20,6 @@
         <activity android:name=".activities.CommandExecutor" />
         <activity android:name=".activities.DebugManager" />
         <activity android:name=".activities.CommandResponse" />
+        <activity android:name=".activities.SearchResult" />
     </application>
 </manifest>

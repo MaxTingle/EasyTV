@@ -25,7 +25,7 @@ public class SearchResult extends Activity
             searchForStr += i == 0 ? SearchResult.searchIn[i] : ", " + SearchResult.searchIn[i];
         }
 
-        ((TextView) this.findViewById(R.id.lblSearchFor)).setText(SearchResult.search + " in " + searchForStr);
+        ((TextView) this.findViewById(R.id.lblSearchFor)).setText("Search result for '" + SearchResult.search + "' in " + searchForStr);
         ((ListView) this.findViewById(R.id.lstSearchResults)).setAdapter(
                 new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, SearchResult.results)
         );

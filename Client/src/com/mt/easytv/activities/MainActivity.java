@@ -172,19 +172,11 @@ public class MainActivity extends Activity
                     public void onResponse(Message reply) throws Exception {
                         progressDialog.dismiss();
 
-                        /* Load torrents we haven't already got */
-                        Torrent[] torrents = (Torrent[]) reply.params;
-                        for (int i = 0; i < torrents.length; i++) {
-                            if (MainActivity.torrents.get(torrents[i].id) == null) {
-                                MainActivity.torrents.put(torrents[i].id, torrents[i]);
-                            }
-                        }
-
                         /* Show the results screen */
-                        SearchResult.searchIn = (String[]) searchIn.toArray();
+                        SearchResult.searchIn = searchIn.toArray(new String[searchIn.size()]);
                         SearchResult.search = search;
-                        SearchResult.results = torrents;
-                        MainActivity.this.setIntent(new Intent(MainActivity.this, SearchResult.class));
+                        SearchResult.results = Torrent.fromMap(reply.params);
+                        MainActivity.this.startActivity(new Intent(MainActivity.this, SearchResult.class));
                     }
                 }, new Runnable()
                 {
@@ -204,7 +196,7 @@ public class MainActivity extends Activity
 
         /* Setup config */
         Config.addDefault("port", "8080");
-        Config.addDefault("address", "192.168.1.138");
+        Config.addDefault("address", "192.168.1.151");
         Config.addDefault("connectionTimeout", 500);
         Config.load();
 

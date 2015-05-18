@@ -1,5 +1,7 @@
 package com.mt.easytv.torrents;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.mt.easytv.Main;
 import com.mt.easytv.interaction.Messager;
 
@@ -11,7 +13,10 @@ public class Torrent
     public float  size; //MB
     public int    seeders;
     public int    leechers;
-    TorrentState _state;
+
+    @Expose
+    @SerializedName("state")
+    TorrentState _state = TorrentState.SEARCHED;
     private TorrentDownload _download;
 
     public void loadState() throws Exception {

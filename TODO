@@ -1,20 +1,15 @@
-SERVER:
-    OPTIMIZATIONS:
+OPTIMIZATIONS:
 
-    IMPLEMENTATIONS:
-        - Server sending updates to all clients when a torrent session update is pushed. Server sending updates to all clients when vlcj has event
-        - Implement scores to client and server
-        - Server displaying all downloading status on the jframe
-        - Add piratebaylocal search factory and multi thread the searching
-        - kickasstorrents searching
-        - piratebay site searching
+IMPLEMENTATIONS:
+    - Server sending updates to all clients when a torrent session update is pushed. Server sending updates to all clients when vlcj has event
+    - Implement scores to client and server
+    - Server displaying all downloading status on the jframe
+    - Add piratebaylocal search factory and multi thread the searching
+    - kickasstorrents searching
+    - piratebay site searching
 
-    FIXES:
-        - Messager redraw ugly in an IDE embedded terminal
-        - Messager stops drawing new lines after X refreshes
-
-CLIENT:
-
+FIXES:
+    - On client the debug text isn't scrollable
 
 NOTEPAD:
 search -search "test" -searchIn piratebaylocal -sortBy seeders -view -progress

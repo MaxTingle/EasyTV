@@ -1,7 +1,10 @@
 package com.mt.easytv.activities;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -13,12 +16,13 @@ public class SearchResult extends Activity
     public static String    search;
     public static String[]  searchIn;
     public static Torrent[] results;
+    private Torrent[] _torrentsOnCreation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.search_result);
-
+        this._torrentsOnCreation = SearchResult.results;
 
         String searchForStr = "";
         for (int i = 0; i < SearchResult.searchIn.length; i++) {
@@ -26,8 +30,16 @@ public class SearchResult extends Activity
         }
 
         ((TextView) this.findViewById(R.id.lblSearchFor)).setText("Search result for '" + SearchResult.search + "' in " + searchForStr);
-        ((ListView) this.findViewById(R.id.lstSearchResults)).setAdapter(
-                new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, SearchResult.results)
-        );
+
+        ListView searchList = (ListView) this.findViewById(R.id.lstSearchResults);
+        searchList.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, SearchResult.results));
+        searchList.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                ViewTorrent.torrent = SearchResult.this._torrentsOnCreation[position];
+                SearchResult.this.startActivity(new Intent(SearchResult.this, ViewTorrent.class));
+            }
+        });
     }
 }

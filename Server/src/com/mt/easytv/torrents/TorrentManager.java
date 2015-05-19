@@ -1,6 +1,7 @@
 package com.mt.easytv.torrents;
 
 import com.mt.easytv.torrents.sources.*;
+import com.sun.istack.internal.NotNull;
 
 import java.util.*;
 
@@ -24,13 +25,30 @@ public final class TorrentManager
     }
 
     /**
+     * Gets a single searched torrent
+     *
+     * @return The torrent or null if it's not found
+     */
+    public static Torrent getSearchedTorrent(@NotNull String torrentId) {
+        for (ArrayList<Torrent> torrents : TorrentManager._previousSearches.values()) {
+            for (Torrent torrent : torrents) {
+                if (torrentId.equals(torrent.id)) {
+                    return torrent;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Searches all the torrent sources found in the searchIn array, without logging progress
      *
      * @return The results which have a title that matches more than the config match threshold
      * @throws Exception             There was an exception while searching
      * @throws TorrentSourceNotFound An invalid torrent source in the searchIn array
      */
-    public static ArrayList<Torrent> search(String searchTerms, String[] searchIn) throws Exception {
+    public static ArrayList<Torrent> search(@NotNull String searchTerms, @NotNull String[] searchIn) throws Exception {
         return TorrentManager.search(searchTerms, searchIn, false);
     }
 
@@ -42,22 +60,46 @@ public final class TorrentManager
      * @throws Exception             There was an exception while searching
      * @throws TorrentSourceNotFound An invalid torrent source in the searchIn array
      */
-    public static ArrayList<Torrent> search(String searchTerms, String[] searchIn, boolean showProgress) throws Exception {
+    public static ArrayList<Torrent> search(@NotNull String searchTerms, @NotNull String[] searchIn, @NotNull boolean showProgress) throws Exception {
         if (TorrentManager._previousSearches.containsKey(searchTerms)) {
             return TorrentManager._previousSearches.get(searchTerms);
         }
 
+        //load all the torrents
         ArrayList<Torrent> torrents = new ArrayList<>();
-
         for (String sourceName : searchIn) {
             torrents.addAll(TorrentManager._siteShortToSite(sourceName).search(searchTerms, showProgress));
         }
 
+        //calculate their scores
+        //relevance score
+        torrents.sort((Torrent t, Torrent t2) -> t.score.relevance == t2.score.relevance ? 0 : (t.score.relevance > t2.score.relevance ? 1 : -1));
+        for (int i = 0; i < torrents.size(); i++) {
+            torrents.get(i).score.relevanceScore = i;
+        }
+
+        //ratio score
+        torrents.sort((Torrent t, Torrent t2) -> t.score.ratio == t2.score.ratio ? 0 : (t.score.ratio > t2.score.ratio ? 1 : -1));
+        for (int i = 0; i < torrents.size(); i++) {
+            torrents.get(i).score.ratioScore = i;
+        }
+
+        //seeders score
+        torrents.sort((Torrent t, Torrent t2) -> t.seeders == t2.seeders ? 0 : (t.seeders > t2.seeders ? 1 : -1));
+        for (int i = 0; i < torrents.size(); i++) {
+            Torrent torrent = torrents.get(i);
+            torrent.score.seedersScore = i;
+            torrent.score.updateOverallScore();
+        }
+
+        torrents.sort((Torrent t, Torrent t2) -> t.score.getOverallScore() == t2.score.getOverallScore() ? 0 : (t.score.getOverallScore() > t2.score.getOverallScore() ? 1 : -1));
+
+        //cache the result
         TorrentManager._previousSearches.put(searchTerms, torrents);
         return torrents;
     }
 
-    private static TorrentSource _siteShortToSite(String siteShort) throws TorrentSourceNotFound {
+    private static ITorrentSource _siteShortToSite(String siteShort) throws TorrentSourceNotFound {
         switch (siteShort.toLowerCase()) {
             case "kickass":
                 return new Kickass();
@@ -70,19 +112,42 @@ public final class TorrentManager
         throw new TorrentSourceNotFound(siteShort);
     }
 
-    /**
-     * Loads all the unique torrents (URL based uniqueness) into the torrents array, without showing progress
-     *
-     * @return The number of items loaded
-     */
-    public int load(String searchTerms, String[] searchIn) throws Exception {
-        return this.load(searchTerms, searchIn, false);
+    private static void _setIDs(ArrayList<Torrent> torrents, ArrayList<Torrent> used) throws Exception {
+        /* Prebuild array of already used ids so not done every loop */
+        ArrayList<String> usedIDs = new ArrayList<>();
+        used.forEach((Torrent t) -> usedIDs.add(t.id));
+
+        /* Generate unique ids */
+        Iterator<Torrent> torrentsIterator = torrents.iterator();
+
+        while (torrentsIterator.hasNext()) { //used while because exception gets thrown and don't want own collection
+            Torrent torrent = torrentsIterator.next();
+            torrent.id = TorrentManager._generateId(usedIDs, 0);
+            usedIDs.add(torrent.id);
+        }
+    }
+
+    private static String _generateId(ArrayList<String> usedIDs, int iterations) throws Exception {
+        if (iterations > 30) {
+            throw new Exception("Max id iteration reached. Probably out of unique IDs");
+        }
+
+        char[] chars = "qwertyuiopasdfghjklzxcvbnm1234567890".toCharArray();
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+
+        for (int i = 0; i < 20; i++) {
+            sb.append(chars[random.nextInt(chars.length)]);
+        }
+
+        String id = sb.toString();
+        return usedIDs.indexOf(id) == -1 ? id : TorrentManager._generateId(usedIDs, iterations + 1);
     }
 
     /**
      * Converts the strings into their representive enum values and calls the regular sort method
      */
-    public void sort(String sortModeStr, String sortTypeStr) throws Exception {
+    public void sort(@NotNull String sortModeStr, @NotNull String sortTypeStr) throws Exception {
         SortMode sortMode;
         SortDirection sortDirection;
 
@@ -138,14 +203,23 @@ public final class TorrentManager
     }
 
     /**
+     * Loads all the unique torrents (URL based uniqueness) into the torrents array, without showing progress
+     *
+     * @return The number of items loaded
+     */
+    public int load(@NotNull String searchTerms, @NotNull String[] searchIn) throws Exception {
+        return this.load(searchTerms, searchIn, false);
+    }
+
+    /**
      * Loads all the unique torrents (URL based uniqueness) into the torrents array, with showing progress as specified
      *
      * @param showProgress Whether or not the write to the Messager when the searcher progresses
      * @return The number of items loaded
      */
-    public int load(String searchTerms, String[] searchIn, boolean showProgress) throws Exception {
+    public int load(@NotNull String searchTerms, @NotNull String[] searchIn, @NotNull boolean showProgress) throws Exception {
         ArrayList<Torrent> torrents = TorrentManager.search(searchTerms, searchIn, showProgress);
-        this._setIDs(torrents);
+        TorrentManager._setIDs(torrents, this._torrents);
 
         ArrayList<String> urls = new ArrayList<>();
         this._torrents.forEach((Torrent t) -> urls.add(t.url));
@@ -157,6 +231,36 @@ public final class TorrentManager
         });
 
         return torrents.size();
+    }
+
+    /**
+     * Loads a torrent that was searched statically
+     *
+     * @param id The id of the searched torrent
+     * @throws Exception Searched torrent not found or already loaded
+     */
+    public void loadSearchedTorrent(@NotNull String id) throws Exception {
+        Torrent searchedTorrent = TorrentManager.getSearchedTorrent(id);
+
+        if (searchedTorrent == null) {
+            throw new Exception("Searched torrent not found");
+        }
+
+        //make sure we don't already have the torrent
+        for (Torrent torrent : this._torrents) {
+            if (torrent.url.equals(searchedTorrent.url)) {
+                throw new Exception("Torrent already loaded");
+            }
+        }
+
+        //copy the torrent from the searched torrents and re-assign its id to prevent mixups
+        Torrent clone = searchedTorrent.clone();
+        ArrayList<String> usedIDs = new ArrayList<>();
+        this._torrents.forEach((Torrent t) -> usedIDs.add(t.id));
+        TorrentManager._generateId(usedIDs, 0);
+
+        //add it to the loaded torrents
+        this._torrents.add(clone);
     }
 
     /**
@@ -195,7 +299,7 @@ public final class TorrentManager
      * @param id the Torrent.id to search for
      * @return The torrent or null if it's not found
      */
-    public Torrent get(String id) {
+    public Torrent get(@NotNull String id) {
         Iterator<Torrent> iterator = this._torrents.iterator();
 
         while (iterator.hasNext()) {
@@ -214,7 +318,7 @@ public final class TorrentManager
      *
      * @return The array of torrents to the size of howMany
      */
-    public Torrent[] get(int howMany) {
+    public Torrent[] get(@NotNull int howMany) {
         return this.get(howMany, 0);
     }
 
@@ -224,7 +328,7 @@ public final class TorrentManager
      * @param howMany How many torrents to load, if howMany + startIndex > size, startIndex will be cutdown to match
      * @return An array the size of howMany, populated with the torrents
      */
-    public Torrent[] get(int howMany, int startIndex) {
+    public Torrent[] get(@NotNull int howMany, @NotNull int startIndex) {
         /* Requesting more than there is */
         int diff = this._torrents.size() - (startIndex + howMany);
         if (diff < 0) {
@@ -246,7 +350,7 @@ public final class TorrentManager
      *
      * @return The torrents paginated
      */
-    public Torrent[] next(int size) {
+    public Torrent[] next(@NotNull int size) {
         Torrent[] torrents = this.get(size, this._paginationIndex);
 
         if (this._paginationIndex + size < this._torrents.size()) {
@@ -269,37 +373,5 @@ public final class TorrentManager
     public void clear() {
         this._torrents.forEach((Torrent t) -> t.getDownload().dispose());
         this._torrents.clear();
-    }
-
-    private void _setIDs(ArrayList<Torrent> torrents) throws Exception {
-        /* Prebuild array of already used ids so not done every loop */
-        ArrayList<String> usedIDs = new ArrayList<>();
-        this._torrents.forEach((Torrent t) -> usedIDs.add(t.id));
-
-        /* Generate unique ids */
-        Iterator<Torrent> torrentsIterator = torrents.iterator();
-
-        while (torrentsIterator.hasNext()) { //used while because exception gets thrown and don't want own collection
-            Torrent torrent = torrentsIterator.next();
-            torrent.id = this._generateId(usedIDs, 0);
-            usedIDs.add(torrent.id);
-        }
-    }
-
-    private String _generateId(ArrayList<String> usedIDs, int iterations) throws Exception {
-        if (iterations > 30) {
-            throw new Exception("Max id iteration reached. Probably out of unique IDs");
-        }
-
-        char[] chars = "qwertyuiopasdfghjklzxcvbnm1234567890".toCharArray();
-        StringBuilder sb = new StringBuilder();
-        Random random = new Random();
-
-        for (int i = 0; i < 20; i++) {
-            sb.append(chars[random.nextInt(chars.length)]);
-        }
-
-        String id = sb.toString();
-        return usedIDs.indexOf(id) == -1 ? id : this._generateId(usedIDs, iterations + 1);
     }
 }

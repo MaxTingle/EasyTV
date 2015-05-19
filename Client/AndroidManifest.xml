@@ -21,5 +21,6 @@
         <activity android:name=".activities.DebugManager" />
         <activity android:name=".activities.CommandResponse" />
         <activity android:name=".activities.SearchResult" />
+        <activity android:name=".activities.ViewTorrent" />
     </application>
 </manifest>

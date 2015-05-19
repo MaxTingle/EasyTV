@@ -2,14 +2,15 @@ package com.mt.easytv.torrents.sources;
 
 import com.mt.easytv.Helpers;
 import com.mt.easytv.Main;
-import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.interaction.Progress;
+import com.mt.easytv.torrents.SearchScore;
 import com.mt.easytv.torrents.Torrent;
+import uk.co.maxtingle.communication.debug.Debugger;
 
 import java.io.*;
 import java.util.ArrayList;
 
-public final class PirateBayLocal implements TorrentSource
+public final class PirateBayLocal implements ITorrentSource
 {
     private final class Structure
     { //int representing the array index of each column
@@ -35,7 +36,7 @@ public final class PirateBayLocal implements TorrentSource
         String torrentsPath = Main.config.getValue("tpbIndex");
 
         if (!new File(torrentsPath).exists()) {
-            Messager.message("PirateBayLocal: Index file not found.");
+            Debugger.log("App", "PirateBayLocal: Index file not found.");
             return new ArrayList<>();
         }
 
@@ -98,12 +99,16 @@ public final class PirateBayLocal implements TorrentSource
 
             /* Processing into a torrent */
             String name = Helpers.cleanTorrentName(lineParts[structure.name]).toLowerCase();
+            double levenshteinDistance = Helpers.similarity(searchTerms, name) * 100;
 
-            if (Math.round(Helpers.similarity(searchTerms, name) * 100) >= matchThreshold) {
-                Torrent torrent = new Torrent();
+            if (Math.round(levenshteinDistance) >= matchThreshold) {
+                int seeders = Integer.parseInt(lineParts[structure.seeders]);
+                int leechers = Integer.parseInt(lineParts[structure.leechers]);
+
+                Torrent torrent = new Torrent(new SearchScore(levenshteinDistance, seeders <= 0 || leechers <= 0 ? 0 : seeders / leechers));
                 torrent.name = lineParts[structure.name];
-                torrent.seeders = Integer.parseInt(lineParts[structure.seeders]);
-                torrent.leechers = Integer.parseInt(lineParts[structure.leechers]);
+                torrent.seeders = seeders;
+                torrent.leechers = leechers;
                 torrent.size = Helpers.byteToMB(Float.parseFloat(lineParts[structure.size])); //bytes
                 torrent.url = "magnet:?xt=urn:btih:" + lineParts[structure.magnet];
                 matches.add(torrent);
@@ -117,7 +122,7 @@ public final class PirateBayLocal implements TorrentSource
         progressTracker.hide();
 
         if (skipped > 0) {
-            Messager.message("Piratebay local search: Skipped " + skipped + " during search");
+            Debugger.log("App", "Piratebay local search: Skipped " + skipped + " during search");
         }
 
         return matches;

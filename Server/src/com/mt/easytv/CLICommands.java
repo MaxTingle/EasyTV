@@ -281,10 +281,6 @@ public class CLICommands
         if (torrent == null) {
             return;
         }
-        else if (fileToPlay == null) {
-            Messager.message("Please specify the torrent file you want to play.");
-            return;
-        }
         else if (torrent.getState() != TorrentState.DOWNLOADED) {
             Messager.message("Torrent not downloaded.");
             return;

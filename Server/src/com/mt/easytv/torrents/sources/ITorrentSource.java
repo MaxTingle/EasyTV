@@ -4,7 +4,7 @@ import com.mt.easytv.torrents.Torrent;
 
 import java.util.ArrayList;
 
-public interface TorrentSource
+public interface ITorrentSource
 {
     Torrent view(String url) throws Exception;
 

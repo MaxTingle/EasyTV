@@ -5,6 +5,7 @@ import com.mt.easytv.commands.CommandArgument;
 import com.mt.easytv.commands.CommandArgumentList;
 import com.mt.easytv.commands.CommandHandler;
 import com.mt.easytv.interaction.Messager;
+import com.mt.easytv.torrents.Torrent;
 import com.mt.easytv.torrents.TorrentManager;
 import uk.co.maxtingle.communication.server.ServerClient;
 
@@ -54,5 +55,48 @@ public class ClientCommands
 
         Messager.message("Searching for " + searchFor + " in " + searchInStr);
         return TorrentManager.search(searchFor, searchInArr).toArray();
+    }
+
+    /**
+     * Downloads a torrent from the loaded torrents
+     * <p>
+     * required:
+     * -id
+     */
+    public static Object[] download(CommandArgumentList args, ServerClient client) throws Exception {
+        ClientCommands._getTorrent(args, false).getDownload().download();
+        return null;
+    }
+
+    /**
+     * Plays a torrent from the loaded torrents
+     * <p>
+     * required:
+     * -id
+     */
+    public static Object[] play(CommandArgumentList args, ServerClient client) throws Exception {
+        ClientCommands._getTorrent(args, true).play(args.getValue("file"));
+        return null;
+    }
+
+    private static Torrent _getTorrent(CommandArgumentList args, boolean alreadyLoaded) throws Exception {
+        String id = args.getValue("id", false);
+
+        if (id == null) {
+            throw new Exception("ID passed as null.");
+        }
+
+        Torrent torrent = Main.torrentManager.get(id);
+
+        if (!alreadyLoaded && torrent == null) {
+            Main.torrentManager.loadSearchedTorrent(id);
+            torrent = Main.torrentManager.get(id);
+        }
+
+        if (torrent == null) {
+            throw new Exception("Torrent not found.");
+        }
+
+        return torrent;
     }
 }

@@ -359,6 +359,7 @@ public final class Main
         /* Client commands */
         Main.commandHandler.addCommand("getCommands", ClientCommands::getCommands);
         Main.commandHandler.addCommand("search", ClientCommands::search, false);
+        Main.commandHandler.addCommand("search", ClientCommands::play, false);
     }
 
     private static void _processExecCommands(String[] args) throws Exception {

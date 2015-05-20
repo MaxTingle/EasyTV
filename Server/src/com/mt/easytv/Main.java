@@ -49,8 +49,8 @@ public final class Main
     public static JFrame                           displayFrame;
     public static EmbeddedMediaListPlayerComponent mediaPlayer;
     public static Torrent                          playingTorrent;
+    public static Server server;
 
-    private static Server _server;
     private static boolean _running = true;
 
     public static void main(String[] args) throws Exception {
@@ -102,11 +102,12 @@ public final class Main
                 Messager.immediateMessage("[" + category + "]" + message);
             }
         });
-        Main._server = new Server();
-        Main._server.onMessageReceived(Main.commandHandler::processCommand);
+
+        Main.server = new Server();
+        Main.server.onMessageReceived(Main.commandHandler::processCommand);
 
         try {
-            Main._server.start();
+            Main.server.start();
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -224,7 +225,7 @@ public final class Main
 
                 /* Stop the server listener */
                 try {
-                    Main._server.stop();
+                    Main.server.stop();
                 }
                 catch (Exception e) {
                     Messager.error("Failed to stop listener server ", e);
@@ -264,9 +265,6 @@ public final class Main
         Main.torrentSession = new Session();
         Main.torrentDownloader = new Downloader(Main.torrentSession);
         Main.dhtListener = new DHT(Main.torrentSession);
-
-        /* Setup the sync manager that maintains contact between the server and clients and handles errors */
-        Main.torrentSession.addListener(new TorrentSyncManager());
 
         /* Start the DHT server for fetching magnetdata from hash */
         Messager.immediateMessage("DHT waiting for nodes");

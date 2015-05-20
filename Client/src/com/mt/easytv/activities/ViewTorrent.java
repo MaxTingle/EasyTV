@@ -1,12 +1,16 @@
 package com.mt.easytv.activities;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import com.mt.easytv.CommandArgument;
 import com.mt.easytv.R;
+import com.mt.easytv.ResponseCallback;
 import com.mt.easytv.torrents.Torrent;
 import com.mt.easytv.torrents.TorrentState;
+import uk.co.maxtingle.communication.common.Message;
 
 public class ViewTorrent extends Activity
 {
@@ -19,6 +23,7 @@ public class ViewTorrent extends Activity
         this.setContentView(R.layout.view_torrent);
 
         this._torrentOnCreation = ViewTorrent.torrent;
+        this._resetButtons();
         this._fillFields();
         this._disableButtons();
         this._bindButtons();
@@ -41,8 +46,19 @@ public class ViewTorrent extends Activity
         );
     }
 
+    private void _resetButtons() {
+        this.findViewById(R.id.btnDownloadTorrent).setEnabled(true);
+        this.findViewById(R.id.btnPlayTorrent).setEnabled(true);
+    }
+
     private void _disableButtons() {
-        //TODO: Conditionally disable the buttons based upon the state of the torrent
+        if (this._torrentOnCreation.state != TorrentState.DOWNLOADED) {
+            this.findViewById(R.id.btnPlayTorrent).setEnabled(false);
+        }
+
+        if (this._torrentOnCreation.state != TorrentState.LOADED && this._torrentOnCreation.state != TorrentState.SEARCHED) {
+            this.findViewById(R.id.btnDownloadTorrent).setEnabled(false);
+        }
     }
 
     private void _bindButtons() {
@@ -50,15 +66,59 @@ public class ViewTorrent extends Activity
         {
             @Override
             public void onClick(View v) {
-                //TODO: WRITE THIS
+                MainActivity.safeClientRequest(ViewTorrent.this, new Message("play", new Object[]{
+                        new CommandArgument("id", ViewTorrent.this._torrentOnCreation.getId())
+                }), new ResponseCallback()
+                {
+                    @Override
+                    public void onResponse(Message reply) throws Exception {
+                        if (ViewTorrent.this._torrentOnCreation.state != TorrentState.SEARCHED) {
+                            //already loaded into the system, can update its status immediately
+                            Torrent torrent = MainActivity.torrents.get(ViewTorrent.this._torrentOnCreation.getId());
+
+                            if (torrent != null) {
+                                torrent.state = TorrentState.ACTIONED;
+                            }
+                        }
+
+                        ViewTorrent.this._torrentOnCreation.state = TorrentState.ACTIONED;
+
+                        new AlertDialog.Builder(ViewTorrent.this)
+                                .setTitle("Torrent status update")
+                                .setMessage("Started playing " + ViewTorrent.this._torrentOnCreation.getName())
+                                .show();
+                    }
+                });
             }
         });
 
-        this.findViewById(R.id.btnPlayTorrent).setOnClickListener(new View.OnClickListener()
+        this.findViewById(R.id.btnDownloadTorrent).setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v) {
-                //TODO: WRITE THIS
+                MainActivity.safeClientRequest(ViewTorrent.this, new Message("play", new Object[]{
+                        new CommandArgument("id", ViewTorrent.this._torrentOnCreation.getId())
+                }), new ResponseCallback()
+                {
+                    @Override
+                    public void onResponse(Message reply) throws Exception {
+                        if (ViewTorrent.this._torrentOnCreation.state != TorrentState.SEARCHED) {
+                            //already loaded into the system, can update its status immediately
+                            Torrent torrent = MainActivity.torrents.get(ViewTorrent.this._torrentOnCreation.getId());
+
+                            if (torrent != null) {
+                                torrent.state = TorrentState.DOWNLOADING_META;
+                            }
+                        }
+
+                        ViewTorrent.this._torrentOnCreation.state = TorrentState.DOWNLOADING_META;
+
+                        new AlertDialog.Builder(ViewTorrent.this)
+                                .setTitle("Torrent status update")
+                                .setMessage("Started downloading " + ViewTorrent.this._torrentOnCreation.getName())
+                                .show();
+                    }
+                });
             }
         });
     }

@@ -1,15 +1,18 @@
 OPTIMIZATIONS:
 
-IMPLEMENTATIONS:
-    - Server sending updates to all clients when a torrent session update is pushed. Server sending updates to all clients when vlcj has event
+WISH LIST:
     - Server displaying all downloading status on the jframe
-    - Add piratebaylocal search factory and multi thread the searching
     - kickasstorrents searching
     - piratebay site searching
-    - Make the download and play buttons on the client torrent do their actions
+
+NEEDED:
+    - Add piratebaylocal search factory and multi thread the searching
+    - Cleanup on server side of the searched torrents and loaded torrents after X amount of time.
+      Remove from array and send __TORRENT_REMOVE__ to all clients with params[0] as id
+    - Docblocks.
 
 FIXES:
-    - On client the debug text isn't scrollable
+
 
 NOTEPAD:
 search -search "test" -searchIn piratebaylocal -sortBy seeders -view -progress

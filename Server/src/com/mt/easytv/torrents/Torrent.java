@@ -21,9 +21,15 @@ public class Torrent
     public int    seeders;
     public int    leechers;
     public SearchScore score;
+
     @Expose
     @SerializedName("state")
     TorrentState _state = TorrentState.SEARCHED;
+
+    @Expose
+    @SerializedName("progress")
+    int _percentDownloaded;
+
     private TorrentDownload _download;
 
     public Torrent(@NotNull SearchScore score) {
@@ -32,16 +38,16 @@ public class Torrent
 
     public void loadState() throws Exception {
         if (this.getDownload().isDownloaded()) {
-            this._state = TorrentState.DOWNLOADED;
+            this._setState(TorrentState.DOWNLOADED);
         }
         else if (this.getDownload().isDownloading()) {
-            this._state = TorrentState.DOWNLOADING;
+            this._setState(this._state = TorrentState.DOWNLOADING);
         }
         else if (this.getDownload().metaExists()) {
-            this._state = TorrentState.DOWNLOADED_META;
+            this._setState(TorrentState.DOWNLOADED_META);
         }
         else {
-            this._state = TorrentState.LOADED;
+            this._state = TorrentState.LOADED; //clients don't care about loaded
         }
     }
 
@@ -89,12 +95,12 @@ public class Torrent
         Main.displayFrame.setVisible(true);
         Main.mediaPlayer.getMediaPlayer().setFullScreen(true);
         Main.mediaPlayer.getMediaPlayer().playMedia(fileName);
-        this._state = TorrentState.ACTIONED;
+        this._setState(TorrentState.ACTIONED);
     }
 
     public void pause() {
         Main.mediaPlayer.getMediaPlayer().stop();
-        this._state = TorrentState.DOWNLOADED;
+        this._setState(TorrentState.DOWNLOADED);
     }
 
     public TorrentState getState() {
@@ -136,5 +142,10 @@ public class Torrent
         }
 
         return str;
+    }
+
+    void _setState(TorrentState state) {
+        this._state = state;
+        Messager.informClientsAboutChange(this);
     }
 }

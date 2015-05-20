@@ -1,5 +1,6 @@
 package com.mt.easytv.torrents;
 
+import com.frostwire.jlibtorrent.TorrentHandle;
 import com.mt.easytv.torrents.sources.*;
 import com.sun.istack.internal.NotNull;
 
@@ -306,6 +307,22 @@ public final class TorrentManager
             Torrent torrent = iterator.next();
 
             if (torrent.id.equals(id)) {
+                return torrent;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets a single torrent based upon its jlibtorrent handle
+     *
+     * @param handle The jlibtorrent handle
+     * @return The found torrent or null when note found
+     */
+    public Torrent get(@NotNull TorrentHandle handle) {
+        for (Torrent torrent : this._torrents) {
+            if (torrent.getDownload().getHandle() == handle) {
                 return torrent;
             }
         }

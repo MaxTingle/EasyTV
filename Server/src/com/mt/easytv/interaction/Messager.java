@@ -1,5 +1,10 @@
 package com.mt.easytv.interaction;
 
+import com.mt.easytv.Main;
+import com.mt.easytv.torrents.Torrent;
+import uk.co.maxtingle.communication.common.Message;
+import uk.co.maxtingle.communication.server.ServerClient;
+
 import java.util.ArrayList;
 
 public final class Messager
@@ -12,6 +17,21 @@ public final class Messager
     public static void immediateMessage(String msg) {
         System.out.println(msg);
         Messager.addBufferLine(msg);
+    }
+
+    public static void messageAllClients(Message message) throws Exception {
+        for (ServerClient client : Main.server.getAcceptedClients()) {
+            client.sendMessage(message.clone());
+        }
+    }
+
+    public static void informClientsAboutChange(Torrent torrent) {
+        try {
+            Messager.messageAllClients(new Message("__TORRENT_UPDATE__", new Object[]{torrent}));
+        }
+        catch (Exception e) {
+            Messager.message("Failed to update clients about torrent change: " + e.getMessage());
+        }
     }
 
     public static void message(String msg) {

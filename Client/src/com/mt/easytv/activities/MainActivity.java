@@ -26,6 +26,7 @@ import uk.co.maxtingle.communication.debug.EventLogger;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends Activity
 {
@@ -216,6 +217,39 @@ public class MainActivity extends Activity
             public void run() {
                 try {
                     MainActivity.client = new Client(new Socket(Config.getValue("address"), Integer.parseInt(Config.getValue("port"))));
+                    MainActivity.client.onMessageReceived(new MessageReceived()
+                    {
+                        @Override
+                        public void onMessageReceived(BaseClient baseClient, final Message message) throws Exception {
+                            MainActivity.this.runOnUiThread(new Runnable()
+                            {
+                                @Override
+                                public void run() {
+                                    if (message.request != null && message.request.startsWith("__TORRENT") && message.params.length <= 0) {
+                                        new AlertDialog.Builder(MainActivity.this)
+                                                .setTitle("Error with torrent special request")
+                                                .setMessage("Torrent id not given in torrent request of type " + message.request)
+                                                .show();
+                                        return;
+                                    }
+
+                                    if ("__TORRENT_UPDATE__".equals(message.request)) {
+                                        Torrent updated = Torrent.fromMap((Map) message.params[0]);
+                                        MainActivity.torrents.put(updated.getId(), updated);
+                                    }
+                                    else if ("__TORRENT_ERROR__".equals(message.request)) {
+                                        new AlertDialog.Builder(MainActivity.this)
+                                                .setTitle("Error with torrent")
+                                                .setMessage((String) message.params[0])
+                                                .show();
+                                    }
+                                    else if ("__TORRENT_REMOVE__".equals(message.request)) {
+                                        MainActivity.torrents.remove(message.params[0]);
+                                    }
+                                }
+                            });
+                        }
+                    });
                 }
                 catch (final Exception e) {
                     MainActivity.this.runOnUiThread(new Runnable()

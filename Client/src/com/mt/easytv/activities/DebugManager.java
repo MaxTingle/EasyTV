@@ -2,6 +2,7 @@ package com.mt.easytv.activities;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 import com.mt.easytv.R;
 import com.mt.easytv.config.Config;
@@ -31,6 +32,7 @@ public class DebugManager extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.debugger);
+        ((TextView) this.findViewById(R.id.lblDebugLog)).setMovementMethod(new ScrollingMovementMethod());
     }
 
     @Override

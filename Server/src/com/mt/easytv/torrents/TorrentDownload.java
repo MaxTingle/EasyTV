@@ -8,6 +8,7 @@ import com.frostwire.jlibtorrent.alerts.BlockFinishedAlert;
 import com.frostwire.jlibtorrent.alerts.TorrentFinishedAlert;
 import com.mt.easytv.Helpers;
 import com.mt.easytv.Main;
+import com.mt.easytv.interaction.Messager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,7 +26,6 @@ public class TorrentDownload
     private TorrentHandle  _torrentHandle;
     private Torrent        _torrent;
     private ProgressAction _progressAction;
-    private int _percentDownloaded;
 
     public TorrentDownload(Torrent torrent) {
         this._torrent = torrent;
@@ -317,11 +317,11 @@ public class TorrentDownload
     }
 
     public int getPercentDownloaded() {
-        return this._percentDownloaded;
+        return this._torrent._percentDownloaded;
     }
 
     private void _updateState(TorrentState state) {
-        this._torrent._state = state;
+        this._torrent._setState(state);
 
         if (this._progressAction != null) {
             this._progressAction.onProgress(0);
@@ -330,8 +330,9 @@ public class TorrentDownload
 
     private void _updateState(int percentCompleted) {
         if (this._progressAction != null) {
-            this._percentDownloaded = percentCompleted;
+            this._torrent._percentDownloaded = percentCompleted;
             this._progressAction.onProgress(percentCompleted);
+            Messager.informClientsAboutChange(this._torrent);
         }
     }
 }

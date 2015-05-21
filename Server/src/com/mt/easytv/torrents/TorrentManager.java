@@ -1,6 +1,8 @@
 package com.mt.easytv.torrents;
 
 import com.frostwire.jlibtorrent.TorrentHandle;
+import com.mt.easytv.Main;
+import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.torrents.sources.*;
 import com.sun.istack.internal.NotNull;
 
@@ -8,9 +10,13 @@ import java.util.*;
 
 public final class TorrentManager
 {
+    private static boolean _searchCleanupThreadRunning;
+    private static Thread  _searchCleanupThread;
     private static HashMap<String, ArrayList<Torrent>> _previousSearches = new HashMap<>();
     private        ArrayList<Torrent>                  _torrents         = new ArrayList<>();
     private        int                                 _paginationIndex  = 0;
+    private boolean _cleanupThreadRunning;
+    private Thread  _cleanupThread;
 
     public enum SortMode
     {
@@ -146,6 +152,53 @@ public final class TorrentManager
     }
 
     /**
+     * Starts the cleaning thread to dispose of unused, searched torrents
+     *
+     * @throws Exception Failed to start the thread
+     */
+    public static void startSearchCleaner() throws Exception {
+        if (TorrentManager._searchCleanupThread != null && TorrentManager._searchCleanupThread.isAlive()) {
+            throw new Exception("Cleaner thread already running.");
+        }
+
+        TorrentManager._searchCleanupThread = new Thread(() -> {
+            int sleepTime = Integer.parseInt(Main.config.getValue("cleanInterval"));
+            TorrentManager._searchCleanupThreadRunning = true;
+
+            try { //skip the first interval
+                Thread.sleep(sleepTime);
+            }
+            catch (Exception e) {
+                Messager.error("Error when doing initial search cleanup thread sleeping", e);
+            }
+
+            while (TorrentManager._searchCleanupThreadRunning) {
+                try {
+                    TorrentManager._previousSearches.clear();
+                    Thread.sleep(sleepTime);
+                }
+                catch (Exception e) {
+                    if (TorrentManager._searchCleanupThreadRunning) {
+                        Messager.error("Error when sleeping search cleanup thread", e);
+                    }
+                }
+            }
+        });
+        TorrentManager._searchCleanupThread.start();
+    }
+
+    /**
+     * Safely stops the search cleaner thread
+     */
+    public static void stopSearchCleaner() {
+        TorrentManager._searchCleanupThreadRunning = false;
+
+        if (TorrentManager._searchCleanupThread != null) {
+            TorrentManager._searchCleanupThread.interrupt();
+        }
+    }
+
+    /**
      * Converts the strings into their representive enum values and calls the regular sort method
      */
     public void sort(@NotNull String sortModeStr, @NotNull String sortTypeStr) throws Exception {
@@ -227,6 +280,10 @@ public final class TorrentManager
 
         torrents.forEach((Torrent t) -> {
             if (urls.indexOf(t.url) == -1) {
+                if (t.getState() == TorrentState.SEARCHED) {
+                    t._state = TorrentState.LOADED; //don't use _setState so not to tell clients about loading torrents
+                }
+
                 this._torrents.add(t);
             }
         });
@@ -390,5 +447,59 @@ public final class TorrentManager
     public void clear() {
         this._torrents.forEach((Torrent t) -> t.getDownload().dispose());
         this._torrents.clear();
+    }
+
+    /**
+     * Starts the cleaning thread to dispose of unused, loaded torrents
+     *
+     * @throws Exception Failed to start the thread
+     */
+    public void startCleaner() throws Exception {
+        if (this._cleanupThread != null && this._cleanupThread.isAlive()) {
+            throw new Exception("Cleaner thread already running.");
+        }
+
+        this._cleanupThread = new Thread(() -> {
+            int sleepTime = Integer.parseInt(Main.config.getValue("cleanInterval"));
+            TorrentManager.this._cleanupThreadRunning = true;
+
+            try { //skip the first interval
+                Thread.sleep(sleepTime);
+            }
+            catch (Exception e) {
+                Messager.error("Error when doing initial cleanup thread sleeping", e);
+            }
+
+            while (TorrentManager.this._cleanupThreadRunning) {
+                try {
+                    TorrentManager.this._torrents.forEach((torrent) -> {
+                        //remove if idling
+                        if (torrent.getState() == TorrentState.SEARCHED || torrent.getState() == TorrentState.LOADED) {
+                            TorrentManager.this._torrents.remove(torrent);
+                            Messager.informClientsAboutRemoval(torrent);
+                        }
+                    });
+
+                    Thread.sleep(sleepTime);
+                }
+                catch (Exception e) {
+                    if (TorrentManager.this._cleanupThreadRunning) {
+                        Messager.error("Error when sleeping cleanup thread", e);
+                    }
+                }
+            }
+        });
+        this._cleanupThread.start();
+    }
+
+    /**
+     * Safely stops the cleaner thread
+     */
+    public void stopCleaner() {
+        this._cleanupThreadRunning = false;
+
+        if (this._cleanupThread != null) {
+            this._cleanupThread.interrupt();
+        }
     }
 }

@@ -89,6 +89,12 @@ public final class Main
         Main.commandHandler.addReader(new BufferedReader(new InputStreamReader(System.in)));
         Messager.message("Command handler ready..");
 
+        /* Cleanup threads */
+        Messager.message("Starting TorrentManager cleanup threads..");
+        Main.torrentManager.startCleaner();
+        TorrentManager.startSearchCleaner();
+        Messager.message("TorrentManager cleanup threads started.");
+
         /* Setup the messager */
         int sleepTime = Integer.parseInt(Main.config.getValue("sleepTime"));
         Messager.startRedrawing(Integer.parseInt(Main.config.getValue("redrawTime")));
@@ -99,7 +105,7 @@ public final class Main
                 Messager.message("[" + category + "] " + message);
             }
             else {
-                Messager.immediateMessage("[" + category + "]" + message);
+                Messager.immediateMessage("[" + category + "] " + message);
             }
         });
 
@@ -205,6 +211,12 @@ public final class Main
                     Messager.error("Failed to shutdown main", e);
                 }
 
+                /* Stop the torrent manage cleaners */
+                Messager.immediateMessage("Stopping TorrentManager cleaner services...");
+                Main.torrentManager.stopCleaner();
+                TorrentManager.stopSearchCleaner();
+                Messager.immediateMessage("Cleaner services stopped");
+
                 /* Update config to save changes to files */
                 try {
                     Messager.immediateMessage("Saving config");
@@ -289,8 +301,9 @@ public final class Main
 
     private static void _addConfigDefaults() {
         /* System */
-        Main.config.addDefault("sleepTime", "1000");
-        Main.config.addDefault("redrawTime", "1000");
+        Main.config.addDefault("sleepTime", 1000);
+        Main.config.addDefault("redrawTime", 1000);
+        Main.config.addDefault("cleanInterval", 1000 * 60 * 5);
 
         /* Server */
         Main.config.addDefault("port", "8080");
@@ -310,12 +323,12 @@ public final class Main
         Main.config.addDefault("tpbIndex", "storage/tpbindex.txt");
 
         /* Searching options */
-        Main.config.addDefault("idSize", "30");
-        Main.config.addDefault("matchThreshold", "60");
-        Main.config.addDefault("defaultTorrentListSize", "10");
+        Main.config.addDefault("idSize", 30);
+        Main.config.addDefault("matchThreshold", 60);
+        Main.config.addDefault("defaultTorrentListSize", 10);
 
         /* Downloading options */
-        Main.config.addDefault("magnetTimeout", "30000");
+        Main.config.addDefault("magnetTimeout", 30000);
         Main.config.addDefault("seedAfterDownload", "false");
         Main.config.addDefault("downloadLimit", 1024 * 1024 * 1024); //1024MB, because why not
         Main.config.addDefault("uploadLimit", (1024 * 1024 * 1024) / 4); //250MB

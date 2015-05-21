@@ -4,7 +4,6 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.mt.easytv.Main;
 import com.mt.easytv.interaction.Messager;
-import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 
 import java.io.File;
@@ -32,10 +31,20 @@ public class Torrent
 
     private TorrentDownload _download;
 
-    public Torrent(@NotNull SearchScore score) {
+    /**
+     * Creates a new instance of a Torrent and sets the score variable
+     *
+     * @param score The score the torrent got when being searched
+     */
+    public Torrent(@Nullable SearchScore score) {
         this.score = score;
     }
 
+    /**
+     * Loads the state of the torrent based upon its previous files and downloading files
+     *
+     * @throws Exception Failed checking the downloading status
+     */
     public void loadState() throws Exception {
         if (this.getDownload().isDownloaded()) {
             this._setState(TorrentState.DOWNLOADED);
@@ -51,6 +60,11 @@ public class Torrent
         }
     }
 
+    /**
+     * Returns the associated torrent download or intializes it
+     *
+     * @return The TorrentDownload download
+     */
     public TorrentDownload getDownload() {
         if (this._download == null) {
             this._download = new TorrentDownload(this);
@@ -59,6 +73,12 @@ public class Torrent
         return this._download;
     }
 
+    /**
+     * Plays the torrent's video media file
+     *
+     * @param fileName The specific file in the torrent's files to play, if null will attempt to play the largest video file
+     * @throws Exception Torrent not in correct state or failed to play
+     */
     public void play(@Nullable String fileName) throws Exception {
         if (this._state == TorrentState.ACTIONED) {
             throw new Exception("Torrent is already playing.");
@@ -98,19 +118,41 @@ public class Torrent
         this._setState(TorrentState.ACTIONED);
     }
 
+    /**
+     * Pauses the torrent playing if it is playing and updates the state
+     */
     public void pause() {
+        if (this.getState() != TorrentState.ACTIONED) {
+            return; //not playing
+        }
+
         Main.mediaPlayer.getMediaPlayer().stop();
         this._setState(TorrentState.DOWNLOADED);
     }
 
+    /**
+     * Gets the torrent's current state
+     *
+     * @return The torrent state or null if it for some reason hasn't been intialized
+     */
     public TorrentState getState() {
         return this._state;
     }
 
+    /**
+     * Returns a stripped down version of the torrent's url for use as a unique identifier
+     *
+     * @return A unique identifier for the torrent or null if it doesn't have a url
+     */
     public String getUniqueName() {
         return this.url == null ? null : this.url.replaceAll("[^0-9a-zA-Z-.,;_() ]", "");
     }
 
+    /**
+     * Gets a clone of the entire torrent, excluding its ids
+     *
+     * @return A clone of this torrent
+     */
     @Override
     public Torrent clone() {
         Torrent torrent = new Torrent(this.score);
@@ -124,6 +166,11 @@ public class Torrent
         return torrent;
     }
 
+    /**
+     * Gets a string representation of the torrent and its download progress if it's downloading
+     *
+     * @return The torrent description or null if the torrent's state isn't set and failed to load
+     */
     public String toString() {
         if (this._state == null) {
             try {

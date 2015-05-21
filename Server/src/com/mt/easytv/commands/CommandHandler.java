@@ -153,7 +153,9 @@ public final class CommandHandler
      *                          it with to be null
      * @return The created command
      */
-    public Command addCommand(CommandSource source, @NotNull String commandName, @Nullable ICommand cliAction, @Nullable IClientCommand clientAction, boolean allowNullArgument) {
+    public Command addCommand(@NotNull CommandSource source, @NotNull String commandName, @Nullable ICommand cliAction,
+                              @Nullable IClientCommand clientAction, boolean allowNullArgument
+    ) {
         Command command = new Command()
         {
             @Override
@@ -225,7 +227,7 @@ public final class CommandHandler
      * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
      */
-    public void processCommand(String commandFull) throws Exception {
+    public void processCommand(@NotNull String commandFull) throws Exception {
         /* Building up argument array */
         String[] commandParts = commandFull.split(" ");
 
@@ -254,7 +256,7 @@ public final class CommandHandler
      * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
      */
-    public void processCommand(BaseClient client, Message clientMessage) throws Exception {
+    public void processCommand(@NotNull BaseClient client, @NotNull Message clientMessage) throws Exception {
         CommandArgumentList args = CommandArgumentList.fromMessage(clientMessage);
 
         if (args == null) {
@@ -289,7 +291,7 @@ public final class CommandHandler
      * @param reader The reader to remove from the list
      * @return Whether or not the reader was found and removed
      */
-    public boolean removeReader(BufferedReader reader) {
+    public boolean removeReader(@NotNull BufferedReader reader) {
         return this._readers.remove(reader);
     }
 
@@ -321,7 +323,7 @@ public final class CommandHandler
      * @throws com.mt.easytv.commands.CommandNotFoundException  Failed to find the command to execute
      * @throws com.mt.easytv.commands.ArgumentNotFoundException Argument failed parsing or is not allowed value
      */
-    public void readFrom(BufferedReader reader) throws Exception {
+    public void readFrom(@NotNull BufferedReader reader) throws Exception {
         if (reader.ready()) {
             String line = reader.readLine();
 

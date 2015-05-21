@@ -8,10 +8,23 @@ import java.net.URL;
 
 public class Helpers
 {
+    /**
+     * Loads a file then gets its dir size
+     * Gets the total size of a directory, including sub directories and files
+     *
+     * @return The size or -1 if the file doesn't exist
+     * @throws Exception File is not a directory or failed to get a list of dir files
+     */
     public static long getDirSize(String dirPath) throws Exception {
         return Helpers.getDirSize(new File(dirPath));
     }
 
+    /**
+     * Gets the total size of a directory, including sub directories and files
+     *
+     * @return The size or -1 if the file doesn't exist
+     * @throws Exception File is not a directory or failed to get a list of dir files
+     */
     public static long getDirSize(File dir) throws Exception {
         if (!dir.exists()) {
             return -1;

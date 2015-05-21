@@ -4,6 +4,9 @@ import com.mt.easytv.torrents.Torrent;
 
 import java.util.ArrayList;
 
+/**
+ * Searches the live PirateBay website
+ */
 public final class PirateBay implements ITorrentSource
 {
     @Override

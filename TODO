@@ -7,8 +7,6 @@ WISH LIST:
 
 NEEDED:
     - Add piratebaylocal search factory and multi thread the searching
-    - Cleanup on server side of the searched torrents and loaded torrents after X amount of time.
-      Remove from array and send __TORRENT_REMOVE__ to all clients with params[0] as id
 
 FIXES:
 

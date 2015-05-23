@@ -123,7 +123,7 @@ public final class Messager
      * @param e      The exception to print to the console
      */
     public static void error(@Nullable String prefix, @NotNull Exception e) {
-        String message = prefix + e.getClass() + " exception " + e.getMessage();
+        String message = prefix + " " + e.getClass().getSimpleName() + " exception " + e.getMessage();
 
         for (StackTraceElement stack : e.getStackTrace()) {
             message += "\nin " + stack.getFileName() + " " + stack.getClassName() + "." + stack.getMethodName() + " on line " + stack.getLineNumber();

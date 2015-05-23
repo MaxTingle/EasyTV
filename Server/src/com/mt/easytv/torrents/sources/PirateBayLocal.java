@@ -147,6 +147,8 @@ public final class PirateBayLocal implements ITorrentSource
             progressTracker.show();
         }
 
+        int minimumSeeders = Integer.parseInt(Main.config.getValue("minimumSeeders"));
+
         while ((line = reader.readLine()) != null) {
             String[] lineParts = line.split("\\|");
 
@@ -186,14 +188,18 @@ public final class PirateBayLocal implements ITorrentSource
             }
 
             /* Processing into a torrent */
+            int seeders = Integer.parseInt(lineParts[structure.seeders]);
+            if(seeders < minimumSeeders) {
+                continue;
+            }
+
             String name = Helpers.cleanTorrentName(lineParts[structure.name]).toLowerCase();
             double levenshteinDistance = Helpers.similarity(searchTerms, name) * 100;
 
             if (Math.round(levenshteinDistance) >= matchThreshold) {
-                int seeders = Integer.parseInt(lineParts[structure.seeders]);
                 int leechers = Integer.parseInt(lineParts[structure.leechers]);
 
-                Torrent torrent = new Torrent(new SearchScore(levenshteinDistance, seeders <= 0 || leechers <= 0 ? 0 : seeders / leechers));
+                Torrent torrent = new Torrent(new SearchScore(levenshteinDistance, SearchScore.calculateRatio(seeders, leechers)));
                 torrent.name = lineParts[structure.name];
                 torrent.seeders = seeders;
                 torrent.leechers = leechers;

@@ -13,22 +13,22 @@ import java.util.List;
 public class Torrent
 {
     private static final List<String> mediaTypes = Arrays.asList("mp4", "wmv", "webm", "avi", "mkv");
-    public String id;
-    public String url;
-    public String name;
-    public float  size; //MB
-    public int    seeders;
-    public int    leechers;
+    public String      id;
+    public String      url;
+    public String      name;
+    public float       size; //MB
+    public int         seeders;
+    public int         leechers;
     public SearchScore score;
 
     @Expose
     @SerializedName("state")
     TorrentState _state = TorrentState.SEARCHED;
-
     @Expose
     @SerializedName("progress")
     int _percentDownloaded;
-
+    @Expose
+    @SerializedName("download")
     private TorrentDownload _download;
 
     /**

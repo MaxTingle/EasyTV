@@ -6,9 +6,11 @@ WISH LIST:
     - piratebay site searching
 
 NEEDED:
-    - Add piratebaylocal search factory and multi thread the searching
+    - List of currently downloading torrents which when clicked will show the latest info using view torrent file
+    - Add stop download / pause action buttons to client
 
 FIXES:
+    - Stop clicking download button crashing the app
 
 
 NOTEPAD:

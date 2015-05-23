@@ -5,8 +5,10 @@ import com.mt.easytv.Main;
 import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.torrents.sources.*;
 import com.sun.istack.internal.NotNull;
+import uk.co.maxtingle.communication.debug.Debugger;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class TorrentManager
 {
@@ -78,21 +80,28 @@ public final class TorrentManager
             torrents.addAll(TorrentManager._siteShortToSite(sourceName).search(searchTerms, showProgress));
         }
 
+        ArrayList<String> usedIds = new ArrayList<>();
+        for (Collection<Torrent> searchedTorrents : TorrentManager._previousSearches.values()) {
+            usedIds.addAll(searchedTorrents.stream().map(t -> t.id).collect(Collectors.toList()));
+        }
+
+        TorrentManager._setIDs(torrents, usedIds);
+
         //calculate their scores
         //relevance score
-        torrents.sort((Torrent t, Torrent t2) -> t.score.relevance == t2.score.relevance ? 0 : (t.score.relevance > t2.score.relevance ? 1 : -1));
+        torrents.sort((Torrent t, Torrent t2) -> t.score.relevance == t2.score.relevance ? 0 : (t.score.relevance > t2.score.relevance ? -1 : 1));
         for (int i = 0; i < torrents.size(); i++) {
             torrents.get(i).score.relevanceScore = i;
         }
 
         //ratio score
-        torrents.sort((Torrent t, Torrent t2) -> t.score.ratio == t2.score.ratio ? 0 : (t.score.ratio > t2.score.ratio ? 1 : -1));
+        torrents.sort((Torrent t, Torrent t2) -> t.score.ratio == t2.score.ratio ? 0 : (t.score.ratio > t2.score.ratio && t.score.ratio != 0 ? -1 : 1));
         for (int i = 0; i < torrents.size(); i++) {
             torrents.get(i).score.ratioScore = i;
         }
 
         //seeders score
-        torrents.sort((Torrent t, Torrent t2) -> t.seeders == t2.seeders ? 0 : (t.seeders > t2.seeders ? 1 : -1));
+        torrents.sort((Torrent t, Torrent t2) -> t.seeders == t2.seeders ? 0 : (t.seeders > t2.seeders ? -1 : 1));
         for (int i = 0; i < torrents.size(); i++) {
             Torrent torrent = torrents.get(i);
             torrent.score.seedersScore = i;
@@ -120,21 +129,21 @@ public final class TorrentManager
     }
 
     private static void _setIDs(ArrayList<Torrent> torrents, ArrayList<Torrent> used) throws Exception {
-        /* Prebuild array of already used ids so not done every loop */
-        ArrayList<String> usedIDs = new ArrayList<>();
-        used.forEach((Torrent t) -> usedIDs.add(t.id));
+        TorrentManager._setIDs(torrents, used.stream().map(t -> t.id).collect(Collectors.toList()));
+    }
 
+    private static void _setIDs(ArrayList<Torrent> torrents, List<String> usedIds) throws Exception {
         /* Generate unique ids */
         Iterator<Torrent> torrentsIterator = torrents.iterator();
 
         while (torrentsIterator.hasNext()) { //used while because exception gets thrown and don't want own collection
             Torrent torrent = torrentsIterator.next();
-            torrent.id = TorrentManager._generateId(usedIDs, 0);
-            usedIDs.add(torrent.id);
+            torrent.id = TorrentManager._generateId(usedIds, 0);
+            usedIds.add(torrent.id);
         }
     }
 
-    private static String _generateId(ArrayList<String> usedIDs, int iterations) throws Exception {
+    private static String _generateId(List<String> usedIDs, int iterations) throws Exception {
         if (iterations > 30) {
             throw new Exception("Max id iteration reached. Probably out of unique IDs");
         }
@@ -149,6 +158,14 @@ public final class TorrentManager
 
         String id = sb.toString();
         return usedIDs.indexOf(id) == -1 ? id : TorrentManager._generateId(usedIDs, iterations + 1);
+    }
+
+    /**
+     * Removes all the search history and searched torrents from memory
+     *
+     */
+    public static void clearSearched() {
+        TorrentManager._previousSearches.clear();
     }
 
     /**
@@ -174,7 +191,8 @@ public final class TorrentManager
 
             while (TorrentManager._searchCleanupThreadRunning) {
                 try {
-                    TorrentManager._previousSearches.clear();
+                    TorrentManager.clearSearched();
+                    Debugger.log("App", "Cleaned up searched torrents");
                     Thread.sleep(sleepTime);
                 }
                 catch (Exception e) {
@@ -313,9 +331,8 @@ public final class TorrentManager
 
         //copy the torrent from the searched torrents and re-assign its id to prevent mixups
         Torrent clone = searchedTorrent.clone();
-        ArrayList<String> usedIDs = new ArrayList<>();
-        this._torrents.forEach((Torrent t) -> usedIDs.add(t.id));
-        TorrentManager._generateId(usedIDs, 0);
+        clone.id = searchedTorrent.id; //shouldn't really be copying over the id as-well but I can't think of an alternative
+        //as the client would need to know about the searched id updating to the new loaded id in everything that references the torrent
 
         //add it to the loaded torrents
         this._torrents.add(clone);
@@ -363,7 +380,7 @@ public final class TorrentManager
         while (iterator.hasNext()) {
             Torrent torrent = iterator.next();
 
-            if (torrent.id.equals(id)) {
+            if (torrent.id != null && torrent.id.equals(id)) {
                 return torrent;
             }
         }
@@ -445,7 +462,16 @@ public final class TorrentManager
      * Calls dispose on all torrent downloads, then clears the internal torrents array
      */
     public void clear() {
-        this._torrents.forEach((Torrent t) -> t.getDownload().dispose());
+        this._torrents.forEach((Torrent torrent) -> {
+            torrent.getDownload().dispose();
+
+            //remove if idling
+            if (torrent.getState() == TorrentState.SEARCHED || torrent.getState() == TorrentState.LOADED) {
+                TorrentManager.this._torrents.remove(torrent);
+                Messager.informClientsAboutRemoval(torrent);
+            }
+        });
+
         this._torrents.clear();
     }
 
@@ -472,14 +498,8 @@ public final class TorrentManager
 
             while (TorrentManager.this._cleanupThreadRunning) {
                 try {
-                    TorrentManager.this._torrents.forEach((torrent) -> {
-                        //remove if idling
-                        if (torrent.getState() == TorrentState.SEARCHED || torrent.getState() == TorrentState.LOADED) {
-                            TorrentManager.this._torrents.remove(torrent);
-                            Messager.informClientsAboutRemoval(torrent);
-                        }
-                    });
-
+                    TorrentManager.this.clear();
+                    Debugger.log("App", "Cleaned up loaded torrents");
                     Thread.sleep(sleepTime);
                 }
                 catch (Exception e) {

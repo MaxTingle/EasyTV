@@ -303,7 +303,7 @@ public final class Main
         /* System */
         Main.config.addDefault("sleepTime", 1000);
         Main.config.addDefault("redrawTime", 1000);
-        Main.config.addDefault("cleanInterval", 1000 * 60 * 5);
+        Main.config.addDefault("cleanInterval", 1000 * 60 * 60 * 3); //every 3 hours
 
         /* Server */
         Main.config.addDefault("port", "8080");
@@ -325,6 +325,7 @@ public final class Main
         /* Searching options */
         Main.config.addDefault("idSize", 30);
         Main.config.addDefault("matchThreshold", 60);
+        Main.config.addDefault("minimumSeeders", 5);
         Main.config.addDefault("defaultTorrentListSize", 10);
 
         /* Downloading options */
@@ -366,11 +367,15 @@ public final class Main
         Main.commandHandler.addCommand("play", CLICommands::play);
         Main.commandHandler.addCommand("delete", CLICommands::delete);
         Main.commandHandler.addCommand("unstickAll", CLICommands::unstickAll);
+        Main.commandHandler.addCommand("clearTorrents", CLICommands::clearTorrents);
 
         /* Client commands */
         Main.commandHandler.addCommand("getCommands", ClientCommands::getCommands);
         Main.commandHandler.addCommand("search", ClientCommands::search, false);
-        Main.commandHandler.addCommand("search", ClientCommands::play, false);
+        Main.commandHandler.addCommand("cancelDownload", ClientCommands::cancelDownload, false);
+        Main.commandHandler.addCommand("download", ClientCommands::download, false);
+        Main.commandHandler.addCommand("play", ClientCommands::play, false);
+        Main.commandHandler.addCommand("pause", ClientCommands::pause, false);
     }
 
     private static void _processExecCommands(String[] args) throws Exception {

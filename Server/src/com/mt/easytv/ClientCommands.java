@@ -4,9 +4,10 @@ package com.mt.easytv;
 import com.mt.easytv.commands.CommandArgument;
 import com.mt.easytv.commands.CommandArgumentList;
 import com.mt.easytv.commands.CommandHandler;
-import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.torrents.Torrent;
 import com.mt.easytv.torrents.TorrentManager;
+import com.mt.easytv.torrents.TorrentState;
+import uk.co.maxtingle.communication.debug.Debugger;
 import uk.co.maxtingle.communication.server.ServerClient;
 
 import java.util.ArrayList;
@@ -53,13 +54,13 @@ public class ClientCommands
             searchInStr += searchInStr.equals("") ? str : ", " + str;
         }
 
-        Messager.message("Searching for " + searchFor + " in " + searchInStr);
+        Debugger.log("App", "Searching for " + searchFor + " in " + searchInStr);
         return TorrentManager.search(searchFor, searchInArr).toArray();
     }
 
     /**
      * Downloads a torrent from the loaded torrents
-     * <p>
+     *
      * required:
      * -id
      */
@@ -69,13 +70,49 @@ public class ClientCommands
     }
 
     /**
+     * Cancels a downloading, loaded torrent
+     *
+     * required:
+     * -id
+     */
+    public static Object[] cancelDownload(CommandArgumentList args, ServerClient client) throws Exception {
+        Torrent torrent = ClientCommands._getTorrent(args, true);
+
+        if(torrent.getState() != TorrentState.DOWNLOADING && torrent.getState() != TorrentState.DOWNLOADING_META) {
+            throw new Exception("Cannot cancel a torrent download that is not downloading.");
+        }
+        else if(!torrent.getDownload().stopDownload()) {
+            throw new Exception("Failed to stop download.");
+        }
+
+        return null;
+    }
+
+    /**
      * Plays a torrent from the loaded torrents
-     * <p>
+     *
      * required:
      * -id
      */
     public static Object[] play(CommandArgumentList args, ServerClient client) throws Exception {
         ClientCommands._getTorrent(args, true).play(args.getValue("file"));
+        return null;
+    }
+
+    /**
+     * Pauses a playing, loaded torrent
+     *
+     * required:
+     * -id
+     */
+    public static Object[] pause(CommandArgumentList args, ServerClient client) throws Exception {
+        Torrent torrent = ClientCommands._getTorrent(args, true);
+
+        if(torrent.getState() != TorrentState.ACTIONED) {
+            throw new Exception("Cannot pause a torrent that is not playing.");
+        }
+
+        torrent.pause();
         return null;
     }
 

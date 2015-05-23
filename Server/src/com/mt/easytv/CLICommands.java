@@ -5,8 +5,10 @@ import com.mt.easytv.commands.CommandArgumentList;
 import com.mt.easytv.interaction.Messager;
 import com.mt.easytv.interaction.PersistentMessage;
 import com.mt.easytv.torrents.Torrent;
+import com.mt.easytv.torrents.TorrentManager;
 import com.mt.easytv.torrents.TorrentState;
 import com.mt.easytv.torrents.sources.TorrentSourceNotFound;
+import uk.co.maxtingle.communication.debug.Debugger;
 
 import java.io.IOException;
 
@@ -20,7 +22,7 @@ public class CLICommands
      */
     public static void getConfig(CommandArgumentList args) {
         if (args.size() < 1) {
-            Messager.message("getConfig requires the config name");
+            Debugger.log("App", "getConfig requires the config name");
             return;
         }
 
@@ -28,10 +30,10 @@ public class CLICommands
             String value = Main.config.getValue((String) arg.value);
 
             if (value == null) {
-                Messager.message("Config item " + arg.value + " does not exist.");
+                Debugger.log("App", "Config item " + arg.value + " does not exist.");
             }
             else {
-                Messager.message(arg.value + " = " + value);
+                Debugger.log("App", arg.value + " = " + value);
             }
         }
     }
@@ -44,13 +46,13 @@ public class CLICommands
      */
     public static void setConfig(CommandArgumentList args) {
         if (args.size() < 1) {
-            Messager.message("setConfig requires the config name and value. (-name \"value\")");
+            Debugger.log("App", "setConfig requires the config name and value. (-name \"value\")");
             return;
         }
 
         for (CommandArgument arg : args) {
             if (arg.value == null) {
-                Messager.message("config item " + arg.argument + " not updated, value not given.");
+                Debugger.log("App", "config item " + arg.argument + " not updated, value not given.");
                 continue;
             }
 
@@ -59,10 +61,10 @@ public class CLICommands
 
         try {
             Main.config.save(); //just in-case use the debugger close button which kills jvm completely
-            Messager.message("Config updated.");
+            Debugger.log("App", "Config updated.");
         }
         catch (IOException e) {
-            Messager.message("Config update failed " + e.getMessage());
+            Debugger.log("App", "Config update failed " + e.getMessage());
         }
     }
 
@@ -96,15 +98,15 @@ public class CLICommands
         String sortBy = args.getValue("sortBy");
 
         if (searchIn == null || searchFor == null) {
-            Messager.message("search requires the what to search for(-search \"to search for\") and where to search(-searchin \"piratebay, piratebaylocal, kickass\").");
+            Debugger.log("App", "search requires the what to search for(-search \"to search for\") and where to search(-searchin \"piratebay, piratebaylocal, kickass\").");
             return;
         }
 
-        Messager.message("Searching..");
+        Debugger.log("App", "Searching..");
 
         try {
             int loadedCount = Main.torrentManager.load(searchFor, searchIn.split(","), progress);
-            Messager.message("Loaded " + loadedCount + " torrents");
+            Debugger.log("App", "Loaded " + loadedCount + " torrents");
 
             if (sortBy != null) {
                 Main.commandHandler.processCommand("sort -sortBy " + sortBy);
@@ -114,7 +116,7 @@ public class CLICommands
             }
         }
         catch (TorrentSourceNotFound e) {
-            Messager.message(e.getMessage());
+            Debugger.log("App", e.getMessage());
         }
         catch (Exception e) {
             Messager.error("Error searching torrents: ", e);
@@ -130,7 +132,7 @@ public class CLICommands
      */
     public static void view(CommandArgumentList args) {
         if (!Main.torrentManager.hasTorrents()) {
-            Messager.message("No torrents loaded");
+            Debugger.log("App", "No torrents loaded");
             return;
         }
 
@@ -142,7 +144,7 @@ public class CLICommands
         Torrent[] torrents = Main.torrentManager.next(pageSize);
 
         for (Torrent torrent : torrents) {
-            Messager.message(torrent.toString());
+            Debugger.log("App", torrent.toString());
         }
     }
 
@@ -157,17 +159,17 @@ public class CLICommands
         String sortDir = args.getValue("sortDir", "desc");
 
         if (sortBy == null) {
-            Messager.message("Sort requires the sortBy argument (sort -sortBy {sortMode} or sort {sortMode})");
+            Debugger.log("App", "Sort requires the sortBy argument (sort -sortBy {sortMode} or sort {sortMode})");
             return;
         }
 
         try {
             Main.torrentManager.sort(sortBy, sortDir);
             Main.torrentManager.resetPageIndex();
-            Messager.message("Sort complete");
+            Debugger.log("App", "Sort complete");
         }
         catch (Exception e) {
-            Messager.message(e.getMessage());
+            Debugger.log("App", e.getMessage());
         }
     }
 
@@ -183,7 +185,7 @@ public class CLICommands
         boolean makeSticky = args.getValue("unsticky", null) != null;
 
         if (makeSticky && makeUnsticky) {
-            Messager.message("Cannot unstick and stick torrent at the same time!");
+            Debugger.log("App", "Cannot unstick and stick torrent at the same time!");
             return;
         }
 
@@ -197,7 +199,7 @@ public class CLICommands
             PersistentMessage persistentMessage = Messager.getPersistentMessage(torrent);
 
             if (persistentMessage != null) {
-                Messager.message("Cannot stick torrent, torrent is already stickied.");
+                Debugger.log("App", "Cannot stick torrent, torrent is already stickied.");
                 return;
             }
 
@@ -207,16 +209,16 @@ public class CLICommands
             PersistentMessage persistentMessage = Messager.getPersistentMessage(torrent);
 
             if (persistentMessage == null) {
-                Messager.message("Cannot unstick torrent, torrent not stickied.");
+                Debugger.log("App", "Cannot unstick torrent, torrent not stickied.");
                 return;
             }
 
             if (!Messager.removePersistentMessage(persistentMessage)) {
-                Messager.message("Failed to remove persistent message.");
+                Debugger.log("App", "Failed to remove persistent message.");
             }
         }
         else {
-            Messager.message(torrent.toString());
+            Debugger.log("App", torrent.toString());
         }
     }
 
@@ -232,15 +234,15 @@ public class CLICommands
             return;
         }
         else if (torrent.getDownload().isDownloading() && !torrent.getDownload().stopDownload()) {
-            Messager.message("Torrent failed to pause.");
+            Debugger.log("App", "Torrent failed to pause.");
             return;
         }
 
         if (torrent.getDownload().deleteFiles()) {
-            Messager.message("Torrent files deleted.");
+            Debugger.log("App", "Torrent files deleted.");
         }
         else {
-            Messager.message("Torrent files failed to delete.");
+            Debugger.log("App", "Torrent files failed to delete.");
         }
     }
 
@@ -256,15 +258,15 @@ public class CLICommands
             return;
         }
         else if (!torrent.getDownload().isDownloading()) {
-            Messager.message("Torrent not downloading.");
+            Debugger.log("App", "Torrent not downloading.");
             return;
         }
 
         if (torrent.getDownload().stopDownload()) {
-            Messager.message("Download stopped");
+            Debugger.log("App", "Download stopped");
         }
         else {
-            Messager.message("Download failed to stop.");
+            Debugger.log("App", "Download failed to stop.");
         }
     }
 
@@ -282,7 +284,7 @@ public class CLICommands
             return;
         }
         else if (torrent.getState() != TorrentState.DOWNLOADED) {
-            Messager.message("Torrent not downloaded.");
+            Debugger.log("App", "Torrent not downloaded.");
             return;
         }
 
@@ -307,11 +309,11 @@ public class CLICommands
         }
 
         if (!force && torrent.getState() == TorrentState.DOWNLOADED) {
-            Messager.message("Torrent is already downloaded, add -force to redownload.");
+            Debugger.log("App", "Torrent is already downloaded, add -force to redownload.");
             return;
         }
         else if (torrent.getState() == TorrentState.ACTIONED) {
-            Messager.message("Torrent is in playback state.");
+            Debugger.log("App", "Torrent is in playback state.");
             return;
         }
 
@@ -326,11 +328,11 @@ public class CLICommands
 
         torrent.getDownload().download((int percent) -> {
             if (torrent.getState() == TorrentState.DOWNLOADED) {
-                Messager.message("Downloading " + torrent.id + ": " + torrent.name + " completed");
+                Debugger.log("App", "Downloading " + torrent.id + ": " + torrent.name + " completed");
                 Messager.removePersistentMessage(message);
             }
             else if (percent == -1) {//download cancelled
-                Messager.message("Downloading " + torrent.id + ": " + torrent.name + " cancelled");
+                Debugger.log("App", "Downloading " + torrent.id + ": " + torrent.name + " cancelled");
                 Messager.removePersistentMessage(message);
             }
         });
@@ -343,18 +345,27 @@ public class CLICommands
         Messager.removeAllPersistentMessages();
     }
 
+    /**
+     * Clears all loaded torrents from memory
+     */
+    public static void clearTorrents(CommandArgumentList args) {
+        Main.torrentManager.clear();
+        TorrentManager.clearSearched();
+        Debugger.log("App", "Torrents cleared.");
+    }
+
     private static Torrent _torrentFromArgs(CommandArgumentList args, boolean allowEmpty) {
         String id = args.getValue("id", allowEmpty);
 
         if (id == null) {
-            Messager.message("The torrent id is required. (viewOne -id {id} or viewOne {id})");
+            Debugger.log("App", "The torrent id is required. (viewOne -id {id} or viewOne {id})");
             return null;
         }
 
         Torrent torrent = Main.torrentManager.get(id);
 
         if (torrent == null) {
-            Messager.message("Torrent not found.");
+            Debugger.log("App", "Torrent not found.");
         }
 
         return torrent;

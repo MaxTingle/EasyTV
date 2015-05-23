@@ -6,6 +6,8 @@ import com.frostwire.jlibtorrent.TorrentInfo;
 import com.frostwire.jlibtorrent.Utils;
 import com.frostwire.jlibtorrent.alerts.BlockFinishedAlert;
 import com.frostwire.jlibtorrent.alerts.TorrentFinishedAlert;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.mt.easytv.Helpers;
 import com.mt.easytv.Main;
 import com.mt.easytv.interaction.Messager;
@@ -28,16 +30,46 @@ import java.util.Date;
  */
 public class TorrentDownload
 {
-    private TorrentInfo    _torrentInfo;
-    private TorrentHandle  _torrentHandle;
-    private Torrent        _torrent;
-    private ProgressAction _progressAction;
+    private transient TorrentInfo    _torrentInfo;
+    private transient TorrentHandle  _torrentHandle;
+    private transient Torrent        _torrent;
+    private transient ProgressAction _progressAction;
+
+    /* serialize only fields */
+    @Expose
+    @SerializedName("currentSeeders")
+    private int _currentSeeders;
+
+    @Expose
+    @SerializedName("currentPeers")
+    private int _currentPeers;
+
+    @Expose
+    @SerializedName("downloaded")
+    private float _downloaded;
+
+    @Expose
+    @SerializedName("downloadSpeed")
+    private float _downloadSpeed;
+
+    @Expose
+    @SerializedName("uploaded")
+    private float _uploaded;
+
+    @Expose
+    @SerializedName("uploadSpeed")
+    private float _uploadSpeed;
+
+    @Expose
+    @SerializedName("files")
+    private String[] _files;
 
     /**
      * Creates a new TorrentDownload wrapper and sets the Torrent it is linked too
      */
     public TorrentDownload(@NotNull Torrent torrent) {
         this._torrent = torrent;
+        this._currentSeeders = torrent.seeders;
     }
 
     /**
@@ -127,7 +159,7 @@ public class TorrentDownload
      * @throws Exception Torrent file not found, torrent meta is not downloaded or torrent failed downloading
      */
     public void downloadTorrent() throws Exception {
-        if (this._torrent.getState() != TorrentState.DOWNLOADED_META) {
+        if (!this.metaExists()) {
             throw new Exception("Torrent meta must be downloaded to download files.");
         }
 
@@ -473,7 +505,25 @@ public class TorrentDownload
         if (this._progressAction != null) {
             this._torrent._percentDownloaded = percentCompleted;
             this._progressAction.onProgress(percentCompleted);
+            this._updateSerailizeInfo();
             Messager.informClientsAboutChange(this._torrent);
+        }
+    }
+
+    private void _updateSerailizeInfo() {
+        if (this._torrentHandle != null) {
+            this._currentSeeders = this._torrentHandle.getStatus().getNumPeers();
+            this._currentPeers = this._torrentHandle.getStatus().getNumPeers();
+            this._downloaded = Helpers.byteToMB(this._torrentHandle.getStatus().getTotalDownload());
+            this._downloadSpeed = Helpers.byteToMB(this._torrentHandle.getStatus().getDownloadRate());
+            this._uploaded = Helpers.byteToMB(this._torrentHandle.getStatus().getTotalUpload());
+            this._uploadSpeed = Helpers.byteToMB(this._torrentHandle.getStatus().getUploadRate());
+        }
+
+        if (this._torrentInfo != null) {
+            for (int i = 0; i < this._torrentInfo.getFiles().geNumFiles(); i++) {
+                this._files[i] = this._torrentInfo.getFileAt(i).getPath();
+            }
         }
     }
 }

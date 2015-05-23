@@ -1,5 +1,6 @@
 package com.mt.easytv.commands;
 
+import com.mt.easytv.interaction.Messager;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -269,7 +270,13 @@ public final class CommandHandler
                 clientMessage.respond(new Message(true, command.processCommand(args, (ServerClient) client)));
             }
             catch (Exception e) {
-                clientMessage.respond(new Message(false, e.getMessage()));
+                String msg = e.getMessage();
+
+                if (msg == null) {
+                    Messager.error("CRITICAL ERROR IN DOING CLIENT COMMAND", e);
+                }
+
+                clientMessage.respond(new Message(false, msg == null ? e.getClass().getSimpleName() : msg));
             }
         }
     }

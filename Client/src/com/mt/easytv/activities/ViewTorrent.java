@@ -32,8 +32,8 @@ public class ViewTorrent extends Activity
     private void _fillFields() {
         ((TextView) this.findViewById(R.id.lblTorrentName)).setText("Viewing torrent: '" + this._torrentOnCreation.getName() + "'");
         ((TextView) this.findViewById(R.id.lblTorrentInfo)).setText(
-                "Seeders: " + this._torrentOnCreation.seeders + "\n" +
-                "Leeches: " + this._torrentOnCreation.leechers + "\n" +
+                "Seeders: " + this._torrentOnCreation.getSeeders() + "\n" +
+                "Leeches: " + this._torrentOnCreation.getLeechers() + "\n" +
                 "State: " + this._torrentOnCreation.state + "\n" +
                 (this._torrentOnCreation.state == TorrentState.DOWNLOADING ? "Download Progress: " + this._torrentOnCreation.progress + "\n" : "") +
                 "\n\n" +
@@ -96,7 +96,7 @@ public class ViewTorrent extends Activity
         {
             @Override
             public void onClick(View v) {
-                MainActivity.safeClientRequest(ViewTorrent.this, new Message("play", new Object[]{
+                MainActivity.safeClientRequest(ViewTorrent.this, new Message("download", new Object[]{
                         new CommandArgument("id", ViewTorrent.this._torrentOnCreation.getId())
                 }), new ResponseCallback()
                 {
@@ -115,7 +115,7 @@ public class ViewTorrent extends Activity
 
                         new AlertDialog.Builder(ViewTorrent.this)
                                 .setTitle("Torrent status update")
-                                .setMessage("Started downloading " + ViewTorrent.this._torrentOnCreation.getName())
+                                .setMessage("Started playing " + ViewTorrent.this._torrentOnCreation.getName())
                                 .show();
                     }
                 });

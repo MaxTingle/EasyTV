@@ -17,8 +17,10 @@ import com.mt.easytv.ResponseCallback;
 import com.mt.easytv.config.Config;
 import com.mt.easytv.torrents.Torrent;
 import uk.co.maxtingle.communication.client.Client;
+import uk.co.maxtingle.communication.common.AuthState;
 import uk.co.maxtingle.communication.common.BaseClient;
 import uk.co.maxtingle.communication.common.Message;
+import uk.co.maxtingle.communication.common.events.AuthStateChanged;
 import uk.co.maxtingle.communication.common.events.MessageReceived;
 import uk.co.maxtingle.communication.debug.Debugger;
 import uk.co.maxtingle.communication.debug.EventLogger;
@@ -115,6 +117,8 @@ public class MainActivity extends Activity
         this.setContentView(R.layout.main);
         this._initialInit();
         this._bindButtons();
+        this.findViewById(R.id.chkKickass).setEnabled(false);
+        this.findViewById(R.id.chkPirateBay).setEnabled(false);
     }
 
     @Override
@@ -197,7 +201,7 @@ public class MainActivity extends Activity
 
         /* Setup config */
         Config.addDefault("port", "8080");
-        Config.addDefault("address", "192.168.1.151");
+        Config.addDefault("address", "192.168.1.162");
         Config.addDefault("connectionTimeout", 500);
         Config.load();
 
@@ -211,12 +215,34 @@ public class MainActivity extends Activity
         });
 
         /* Start client */
+        final ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
         MainActivity._clientThread = new Thread(new Runnable()
         {
             @Override
             public void run() {
+                MainActivity.this.runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run() {
+                        progressDialog.setTitle("Connecting");
+                        progressDialog.setMessage("Connecting to EasyTV server, please wait...");
+                        progressDialog.setCancelable(false);
+                        progressDialog.setIndeterminate(true);
+                        progressDialog.show();
+                    }
+                });
+
                 try {
                     MainActivity.client = new Client(new Socket(Config.getValue("address"), Integer.parseInt(Config.getValue("port"))));
+                    MainActivity.client.onAuthStateChange(new AuthStateChanged()
+                    {
+                        @Override
+                        public void onAuthStateChanged(AuthState previous, AuthState newState, BaseClient baseClient) {
+                            if(newState == AuthState.ACCEPTED) {
+                                progressDialog.dismiss();
+                            }
+                        }
+                    });
                     MainActivity.client.onMessageReceived(new MessageReceived()
                     {
                         @Override
@@ -256,6 +282,7 @@ public class MainActivity extends Activity
                     {
                         @Override
                         public void run() {
+                            progressDialog.dismiss();
                             new AlertDialog.Builder(MainActivity.this)
                                     .setTitle("Error connecting to server")
                                     .setMessage(e.getMessage())
@@ -263,7 +290,8 @@ public class MainActivity extends Activity
                                     {
                                         @Override
                                         public void onDismiss(DialogInterface dialog) {
-                                            MainActivity.this.finish();
+                                            android.os.Process.killProcess(android.os.Process.myPid());
+                                            System.exit(1);
                                         }
                                     }).show();
                         }

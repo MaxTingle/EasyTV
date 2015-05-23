@@ -7,11 +7,11 @@ public class SearchScore
     private int    relevanceScore;
     private int    seedersScore;
     private int    ratioScore;
-    private double overallScore;
+    private int overallScore;
     private double relevance;
     private double ratio;
 
-    public SearchScore(int relevanceScore, int seedersScore, int ratioScore, double overallScore, double relevance, double ratio) {
+    public SearchScore(int relevanceScore, int seedersScore, int ratioScore, int overallScore, double relevance, double ratio) {
         this.relevanceScore = relevanceScore;
         this.seedersScore = seedersScore;
         this.ratioScore = ratioScore;
@@ -22,7 +22,7 @@ public class SearchScore
 
     public static SearchScore fromMap(Map map) {
         return new SearchScore(((Number) map.get("relevanceScore")).intValue(), ((Number) map.get("seedersScore")).intValue(),
-                               ((Number) map.get("ratioScore")).intValue(), ((Number) map.get("overallScore")).doubleValue(),
+                               ((Number) map.get("ratioScore")).intValue(), ((Number) map.get("overallScore")).intValue(),
                                ((Number) map.get("relevance")).doubleValue(), ((Number) map.get("ratio")).doubleValue());
     }
 

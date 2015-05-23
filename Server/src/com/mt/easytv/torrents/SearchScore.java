@@ -13,7 +13,7 @@ public class SearchScore
 
     @Expose
     @SerializedName("overallScore")
-    private double _overallScore;
+    private int _overallScore;
 
     /**
      * Creates a new instance of the SearchScore and
@@ -45,12 +45,20 @@ public class SearchScore
         this.updateOverallScore();
     }
 
+    public static double calculateRatio(int seeders, int leechers) {
+        if (seeders <= 0 || leechers <= 0) {
+            return 0;
+        }
+
+        return seeders / leechers;
+    }
+
     /**
      * Returns the current overall score
      *
      * @return The current overall score or null if updateOverallScore hasn't been ran to calculate it yet
      */
-    public double getOverallScore() {
+    public int getOverallScore() {
         return this._overallScore;
     }
 
@@ -58,6 +66,6 @@ public class SearchScore
      * Updates the overall score variable
      */
     public void updateOverallScore() {
-        this._overallScore = this.relevanceScore + this.seedersScore + this.ratioScore;
+        this._overallScore = this.relevanceScore + this.seedersScore + (this.ratio <= 0 ? 1000 : this.ratioScore); //ratio not important
     }
 }

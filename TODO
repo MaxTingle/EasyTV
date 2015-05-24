@@ -1,17 +1,14 @@
 OPTIMIZATIONS:
 
 WISH LIST:
-    - Server displaying all downloading status on the jframe
     - kickasstorrents searching
     - piratebay site searching
 
 NEEDED:
-    - List of currently downloading torrents which when clicked will show the latest info using view torrent file
-    - Add stop download / pause action buttons to client
+    - Test playing torrent
 
 FIXES:
-    - Stop clicking download button crashing the app
-
+    - Download not pushing updates to client correctly due to jlibtorrent error which is hiding
 
 NOTEPAD:
 search -search "test" -searchIn piratebaylocal -sortBy seeders -view -progress

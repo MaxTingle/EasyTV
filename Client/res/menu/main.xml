@@ -5,6 +5,12 @@
         android:id="@+id/menu_run_command"
         android:showAsAction="never"
         android:title="@string/run_command_name" />
+
+    <item
+        android:id="@+id/view_downloading_torrents"
+        android:showAsAction="never"
+        android:title="@string/view_downloading_name" />
+
     <item
         android:id="@+id/menu_view_debug"
         android:showAsAction="never"

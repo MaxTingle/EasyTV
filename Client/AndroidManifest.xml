@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    package="com.mt.easytv"
+    package="uk.co.maxtingle.easytv"
     xmlns:android="http://schemas.android.com/apk/res/android"
           android:versionCode="1"
           android:versionName="1.0">
@@ -10,17 +10,18 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name">
         <activity
-            android:name=".activities.MainActivity"
+            android:name="uk.co.maxtingle.easytv.activities.MainActivity"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".activities.CommandExecutor" />
-        <activity android:name=".activities.DebugManager" />
-        <activity android:name=".activities.CommandResponse" />
-        <activity android:name=".activities.SearchResult" />
-        <activity android:name=".activities.ViewTorrent" />
+        <activity android:name="uk.co.maxtingle.easytv.activities.CommandExecutor" />
+        <activity android:name="uk.co.maxtingle.easytv.activities.DebugManager" />
+        <activity android:name="uk.co.maxtingle.easytv.activities.CommandResponse" />
+        <activity android:name="uk.co.maxtingle.easytv.activities.SearchResult" />
+        <activity android:name="uk.co.maxtingle.easytv.activities.ViewTorrent" />
+        <activity android:name="uk.co.maxtingle.easytv.activities.ActiveTorrents" />
     </application>
 </manifest>

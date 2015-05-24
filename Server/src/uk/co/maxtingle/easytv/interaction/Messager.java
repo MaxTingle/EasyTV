@@ -297,7 +297,7 @@ public final class Messager
                 }
             }
         });
-
+        Messager._redrawThread.setName("Messager redraw thread");
         Messager._redrawThread.start();
     }
 

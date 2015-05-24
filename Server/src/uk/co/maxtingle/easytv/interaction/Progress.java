@@ -54,7 +54,7 @@ public final class Progress
      *
      * @return The string representation of the progress
      */
-    public String getProcessed() {
+    public String getProcessedString() {
         return ((int) this._processed) + "/" + ((int) this._total);
     }
 
@@ -68,6 +68,15 @@ public final class Progress
     }
 
     /**
+     * Gets the real number of processed items
+     *
+     * @return The number of items processed
+     */
+    public double getProcessed() {
+        return this._processed;
+    }
+
+    /**
      * Attempts to attach the Progress to the Messager system
      *
      * @return Whether or not the Progress was successfully attached
@@ -77,7 +86,7 @@ public final class Progress
             return false;
         }
 
-        this._persistentMessage = Messager.addPersistentMessage((String previous) -> Progress.this._prefix + " " + Progress.this.getProcessed() +
+        this._persistentMessage = Messager.addPersistentMessage((String previous) -> Progress.this._prefix + " " + Progress.this.getProcessedString() +
                                                                                      " (" + String.format("%.2f", Progress.this.getPercent()) + "%)",
                                                                 this);
 

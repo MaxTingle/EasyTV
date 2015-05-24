@@ -205,6 +205,7 @@ public final class TorrentManager
                 }
             }
         });
+        TorrentManager._searchCleanupThread.setName("Searched torrent cleaner");
         TorrentManager._searchCleanupThread.start();
     }
 
@@ -509,13 +510,15 @@ public final class TorrentManager
      * Calls dispose on all torrent downloads, then clears the internal torrents array
      */
     public void clear() {
-        this._torrents.forEach((Torrent torrent) -> {
+        for (int i = this._torrents.size() - 1; i != -1; i--) {
+            Torrent torrent = this._torrents.get(i);
+
             if (torrent.getState() == TorrentState.SEARCHED || torrent.getState() == TorrentState.LOADED) {
                 torrent.getDownload().dispose();
-                TorrentManager.this._torrents.remove(torrent);
                 Messager.informClientsAboutRemoval(torrent);
+                TorrentManager.this._torrents.remove(i);
             }
-        });
+        }
     }
 
     /**
@@ -553,6 +556,7 @@ public final class TorrentManager
                 }
             }
         });
+        this._cleanupThread.setName("Instance torrent cleaner");
         this._cleanupThread.start();
     }
 

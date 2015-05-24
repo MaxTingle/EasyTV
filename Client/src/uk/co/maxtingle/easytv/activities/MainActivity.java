@@ -329,6 +329,7 @@ public class MainActivity extends Activity
                 }
             }
         });
+        MainActivity._clientThread.setName("Client networking");
         MainActivity._clientThread.start();
     }
 }

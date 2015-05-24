@@ -209,6 +209,7 @@ public class ViewTorrent extends Activity
                 }
             }
         });
+        this._updateThread.setName("Torrent updater");
         this._updateThread.start();
     }
 

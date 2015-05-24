@@ -334,6 +334,7 @@ public final class Main
 
         /* TPB local */
         Main.config.addDefault("tpbIndex", "tpbindex.txt");
+        Main.config.addDefault("tpbThreads", 4);
 
         /* Searching options */
         Main.config.addDefault("idSize", 30);

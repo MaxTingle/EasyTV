@@ -1,5 +1,6 @@
 package uk.co.maxtingle.easytv.torrents;
 
+import java.util.List;
 import java.util.Map;
 
 public class Torrent
@@ -57,7 +58,7 @@ public class Torrent
 
             Object files = downloadInfo.get("files");
             if (files != null) {
-                torrent._files = (String[]) files;
+                torrent._files = files instanceof List ? (String[]) ((List) files).toArray(new String[((List) files).size()]) : (String[]) files;
             }
         }
 
@@ -102,10 +103,10 @@ public class Torrent
 
         if (this.state == TorrentState.DOWNLOADING || this.state == TorrentState.DOWNLOADING_META) {
             stateStr = "\n    Progress: " + this.progress + "%" +
-                       "\n    D/L Speed: " + this._downloadSpeed + "MB/s" +
-                       "\n    D/L'd: " + this._downloaded + "MB" +
-                       "\n    U/L: " + this._uploadSpeed + "MB/s" +
-                       "\n    U/L'd: " + this._uploaded + "MB";
+                       "\n    D/L Speed: " + this._downloadSpeed + " MB/s" +
+                       "\n    D/L'd: " + this._downloaded + " MB" +
+                       "\n    U/L: " + this._uploadSpeed + " MB/s" +
+                       "\n    U/L'd: " + this._uploaded + " MB";
         }
 
         return this._name + "\n    State: " + this.state + stateStr;

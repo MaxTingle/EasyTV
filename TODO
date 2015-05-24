@@ -5,10 +5,10 @@ WISH LIST:
     - piratebay site searching
 
 NEEDED:
-    - Test playing torrent
+
 
 FIXES:
-    - Download not pushing updates to client correctly due to jlibtorrent error which is hiding
+
 
 NOTEPAD:
 search -search "test" -searchIn piratebaylocal -sortBy seeders -view -progress

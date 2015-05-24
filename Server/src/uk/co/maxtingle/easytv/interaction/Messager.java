@@ -86,7 +86,7 @@ public final class Messager
             client.sendMessage(new Message("__TORRENT_UPDATE__", new Object[]{torrent}));
         }
         catch (Exception e) {
-            Messager.message("Failed to update clients about torrent change: " + e.getMessage());
+            Messager.message("Failed to update client about torrent change: " + e.getMessage());
         }
     }
 

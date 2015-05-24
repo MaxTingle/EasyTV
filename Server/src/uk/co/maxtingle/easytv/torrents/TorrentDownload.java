@@ -147,7 +147,9 @@ public class TorrentDownload
             this._updateState(TorrentState.DOWNLOADED_META);
         }
         catch (Exception e) {
+            Debugger.debug("App", e);
             this._updateState(TorrentState.LOADED);
+            throw e;
         }
 
     }
@@ -519,9 +521,9 @@ public class TorrentDownload
 
     private void _updateState(int percentCompleted) {
         this._torrent._previousPercentDownloaded = this._torrent._percentDownloaded;
-        this._torrent._percentDownloaded = percentCompleted;
+        this._torrent._percentDownloaded = percentCompleted == -1 ? 0 : percentCompleted; //-1 is just for onProgress
 
-        if (percentCompleted - this._torrent._previousPercentDownloaded > 0.5) { //large enough change
+        if (this._torrent._percentDownloaded - this._torrent._previousPercentDownloaded > 0.5) { //large enough change
             this._updateSerailizeInfo();
             Messager.informClientsAboutChange(this._torrent);
         }
@@ -543,9 +545,10 @@ public class TorrentDownload
             }
 
             if (this._torrentInfo != null) {
+                this._files = new String[this._torrentInfo.getFiles().geNumFiles()];
+
                 for (int i = 0; i < this._torrentInfo.getFiles().geNumFiles(); i++) {
-                    FileEntry fileEntry = this._torrentInfo.getFileAt(i);
-                    this._files[i] = fileEntry.getPath();
+                    this._files[i] = this._torrentInfo.getFileAt(i).getPath();
                 }
             }
         }
@@ -564,10 +567,6 @@ public class TorrentDownload
         {
             @Override
             public void torrentFinished(TorrentFinishedAlert alert) {
-                if (alert.getHandle() != TorrentDownload.this._torrentHandle) {
-                    return;
-                }
-
                 TorrentDownload.this._updateState(TorrentState.DOWNLOADED);
                 TorrentDownload.this._progressAction = null;
 
@@ -578,10 +577,6 @@ public class TorrentDownload
 
             @Override
             public void blockFinished(BlockFinishedAlert alert) {
-                if (alert.getHandle() != TorrentDownload.this._torrentHandle) {
-                    return;
-                }
-
                 TorrentDownload.this._updateState(Math.round(TorrentDownload.this._torrentHandle.getStatus().getProgress() * 100));
             }
         });

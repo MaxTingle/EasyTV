@@ -106,19 +106,20 @@ public class Torrent
             }
 
             if (largestFileName == null) {
-                throw new Exception("No media files found to play.");
+                throw new Exception("No media files found to play, please select one manually.");
             }
 
             fileName = largestFileName;
         }
 
-        if (Main.playingTorrent != null) {
+        if (Main.playingTorrent != null && Main.playingTorrent.getState() == TorrentState.ACTIONED) {
             Main.playingTorrent.pause();
         }
 
         Main.displayFrame.setVisible(true);
         Main.mediaPlayer.getMediaPlayer().setFullScreen(true);
-        Main.mediaPlayer.getMediaPlayer().playMedia(fileName);
+        Main.mediaPlayer.getMediaPlayer().playMedia(this.getDownload().getDownloadDir() + "\\" + fileName);
+        Main.playingTorrent = this;
         this._setState(TorrentState.ACTIONED);
     }
 
@@ -131,6 +132,7 @@ public class Torrent
         }
 
         Main.mediaPlayer.getMediaPlayer().stop();
+        Main.displayFrame.setVisible(false);
         this._setState(TorrentState.DOWNLOADED);
     }
 

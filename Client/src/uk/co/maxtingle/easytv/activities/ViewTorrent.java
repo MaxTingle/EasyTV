@@ -25,6 +25,7 @@ public class ViewTorrent extends Activity
     private       Torrent _torrent;
     private       Thread  _updateThread;
     private       boolean _updateThreadRunning;
+    private ProgressDialog _progressDialog;
     private boolean _skipUpdateReload = false;
 
     @Override
@@ -39,18 +40,27 @@ public class ViewTorrent extends Activity
 
     @Override
     protected void onStop() {
-        ViewTorrent.this._stopUpdateThread();
+        if (this._progressDialog != null && this._progressDialog.isShowing()) {
+            this._progressDialog.dismiss();
+        }
+
+        this._stopUpdateThread();
         super.onStop();
     }
 
     private void _loadTorrent() {
-        ViewTorrent.this._skipUpdateReload = true;
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setTitle("Progressing");
-        progressDialog.setMessage("Getting updated torrent information...");
-        progressDialog.setCancelable(false);
-        progressDialog.setIndeterminate(true);
-        progressDialog.show();
+        this._skipUpdateReload = true;
+
+        if (this._progressDialog != null && this._progressDialog.isShowing()) {
+            this._progressDialog.dismiss();
+        }
+
+        this._progressDialog = new ProgressDialog(this);
+        this._progressDialog.setTitle("Progressing");
+        this._progressDialog.setMessage("Getting updated torrent information...");
+        this._progressDialog.setCancelable(false);
+        this._progressDialog.setIndeterminate(true);
+        this._progressDialog.show();
 
         MainActivity.safeClientRequest(this, new Message("get", new Object[]{
                 new CommandArgument("id", this._torrentId)
@@ -63,14 +73,14 @@ public class ViewTorrent extends Activity
                 ViewTorrent.this._fillFields();
                 ViewTorrent.this._disableButtons();
                 ViewTorrent.this._bindButtons();
-                progressDialog.dismiss();
+                ViewTorrent.this._progressDialog.dismiss();
             }
         }, new Runnable()
         {
             @Override
             public void run() {
                 ViewTorrent.this._stopUpdateThread();
-                progressDialog.dismiss();
+                ViewTorrent.this._progressDialog.dismiss();
                 ViewTorrent.this.finish();
             }
         });
@@ -81,6 +91,7 @@ public class ViewTorrent extends Activity
         ((TextView) this.findViewById(R.id.lblTorrentInfo)).setText(
                 "Seeders: " + this._torrent.getSeeders() + "\n" +
                 "Leeches: " + this._torrent.getLeechers() + "\n" +
+                "Size: " + this._torrent.getSize() + "MB\n" +
                 this._torrent.toDescriptiveString() +
                 "\n\n" +
                 "Score: " + this._torrent.getScore().getOverallScore() + "\n" +
@@ -101,7 +112,7 @@ public class ViewTorrent extends Activity
         if (this._torrent.state == TorrentState.ACTIONED) {
             this.findViewById(R.id.btnDownloadTorrent).setEnabled(false);
             ((Button) this.findViewById(R.id.btnDownloadTorrent)).setText("Delete files");
-            ((Button) this.findViewById(R.id.btnPlayTorrent)).setText("Pause");
+            ((Button) this.findViewById(R.id.btnPlayTorrent)).setText("Stop");
         }
         else if (this._torrent.state == TorrentState.DOWNLOADED) {
             ((Button) this.findViewById(R.id.btnPlayTorrent)).setText("Play");
@@ -123,7 +134,7 @@ public class ViewTorrent extends Activity
             @Override
             public void onClick(View v) {
                 if (ViewTorrent.this._torrent.state == TorrentState.ACTIONED) {
-                    ViewTorrent.this._doRequest("pause", "Paused torrent ");
+                    ViewTorrent.this._doRequest("pause", "Stopped torrent ");
                 }
                 else {
                     ViewTorrent.this._doRequest("play", "Started playing torrent ");
@@ -149,18 +160,50 @@ public class ViewTorrent extends Activity
     }
 
     private void _doRequest(String request, final String msgPrefix) {
-        ViewTorrent.this._skipUpdateReload = true;
+        this._skipUpdateReload = true;
+
+        if (this._progressDialog != null && this._progressDialog.isShowing()) {
+            this._progressDialog.dismiss();
+        }
+
+        this._progressDialog = new ProgressDialog(this);
+        this._progressDialog.setTitle("Progressing");
+        this._progressDialog.setMessage("Processing request, please wait...");
+        this._progressDialog.setCancelable(false);
+        this._progressDialog.setIndeterminate(true);
+        this._progressDialog.show();
+
         MainActivity.safeClientRequest(ViewTorrent.this, new Message(request, new Object[]{
                 new CommandArgument("id", ViewTorrent.this._torrent.getId())
         }), new ResponseCallback()
         {
             @Override
             public void onResponse(Message reply) throws Exception {
+                ViewTorrent.this.runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run() {
+                        ViewTorrent.this._progressDialog.dismiss();
+                    }
+                });
+
                 ViewTorrent.this._loadTorrent();
                 new AlertDialog.Builder(ViewTorrent.this)
                         .setTitle("Torrent status update")
                         .setMessage(msgPrefix + ViewTorrent.this._torrent.getName())
                         .show();
+            }
+        }, new Runnable()
+        {
+            @Override
+            public void run() {
+                ViewTorrent.this.runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run() {
+                        ViewTorrent.this._progressDialog.dismiss();
+                    }
+                });
             }
         });
     }

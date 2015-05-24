@@ -10,6 +10,7 @@ import uk.co.caprica.vlcj.player.embedded.windows.Win32FullScreenStrategy;
 import uk.co.caprica.vlcj.player.embedded.x.XFullScreenStrategy;
 import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import uk.co.caprica.vlcj.version.LibVlcVersion;
+import uk.co.maxtingle.communication.common.AuthState;
 import uk.co.maxtingle.communication.debug.Debugger;
 import uk.co.maxtingle.communication.server.Server;
 import uk.co.maxtingle.easytv.commands.ArgumentNotFoundException;
@@ -111,12 +112,15 @@ public final class Main
 
         Main.server = new Server();
         Main.server.onMessageReceived(Main.commandHandler::processCommand);
-        Main.server.onClientAuthStateChanged((authState, authState1, baseClient) -> { //inform our client about all the notable torrents
-            Main.torrentManager.getTorrents().forEach(torrent -> {
-                if (torrent.getState() != TorrentState.LOADED && torrent.getState() != TorrentState.SEARCHED) {
-                    Messager.informClientAboutTorrent(baseClient, torrent);
-                }
-            });
+        Main.server.onClientAuthStateChanged((authState, newState, baseClient) -> { //inform our client about all the notable torrents
+            if(newState == AuthState.ACCEPTED) {
+                Main.torrentManager.getTorrents().forEach(torrent -> {
+                    if (torrent.getState() != TorrentState.LOADED && torrent.getState() != TorrentState.SEARCHED) {
+                        Messager.informClientAboutTorrent(baseClient, torrent);
+                    }
+                });
+                Debugger.log("App", "Informed new client about current torrents");
+            }
         });
 
         try {
